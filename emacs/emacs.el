@@ -1,7 +1,9 @@
-;;; emacs.el
-;;; mark a. foltz (spuddybuddy@ubertuber.org)
+;;; emacs.el - Emacs initialization (outside of custom).
+;;; Author: mark a. foltz (spuddybuddy@ubertuber.org)
+;;; Maintainer: mark a. foltz (spuddybuddy@ubertuber.org)
 ;;; http://ubertuber.org/
-;;; hacked on continuously from 1992 - today
+;;; https://github.com/spuddybuddy
+
 ;; list of dependent emacs lisp files and packages.
 ;; clean-buffers.el
 ;; ssh.el - https://github.com/ieure/ssh-el
