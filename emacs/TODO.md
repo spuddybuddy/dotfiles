@@ -1,4 +1,5 @@
-* Mark trailing whitespace in coding modes
-* Enable js2-mode by default
-* Make sure backup files go into a backup folder
-* Check if OS X font hack is still required
+- [ ] Mark trailing whitespace in coding modes
+- [ ] Enable js2-mode by default
+- [ ] Make sure backup files go into a backup folder
+- [ ] Check if OS X font hack is still required
+- [ ] Upgrade Emacs for OS X to 25.2
