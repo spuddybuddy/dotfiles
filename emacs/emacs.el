@@ -58,9 +58,13 @@
             (dirtrack-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;; google specific stuff (at the end)
-(if (file-readable-p "/home/mfoltz")
+;; TODO: Figure out how to use Google site-lisp on Mac
+(defvar mf-google-emacs-path (concat mf-home-dir "/gob/dotfiles/emacs/google"))
+(if (and
+     (file-readable-p mf-google-emacs-path)
+     (not (eq system-type 'darwin)))
     (progn
-      (add-to-list 'load-path (concat mf-emacs-path "/google"))
+      (add-to-list 'load-path mf-google-emacs-path)
       (require 'mf-google)))
 
 (provide 'mf-emacs)
