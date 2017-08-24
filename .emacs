@@ -6,7 +6,11 @@
 ;;; hacked on continuously from 1992 - today
 
 (defvar mf-home-dir (getenv "HOME"))
-(defvar mf-emacs-path (concat mf-home-dir "/emacs"))
+(defvar mf-emacs-path
+  (concat mf-home-dir
+	  (if (eq system-type 'windows-nt)
+	      "\\github\\spuddybuddy\\dotfiles\\emacs"
+	      "/github/spuddybuddy/dotfiles/emacs")))
 (add-to-list 'load-path mf-emacs-path)
 (require 'mf-emacs "emacs.el")
 (custom-set-variables
