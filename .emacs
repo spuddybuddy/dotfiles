@@ -139,6 +139,12 @@
   ;; as of Emacs 24.5.  Set per-frame face defaults as a hook, instead.
   ;; TODO: Still necessary?
   (add-to-list 'after-make-frame-functions 'mf-fix-mac-fonts)
-)
+  )
+
+(when (eq system-type 'windows-nt)
+  (progn
+    (set-face-attribute 'default nil :foundry "Outline" :family "Consolas")
+    (set-frame-font "Consolas-11.5" nil t)))
+
 ;; Always start the server.
 (server-start)
