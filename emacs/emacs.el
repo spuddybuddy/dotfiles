@@ -62,7 +62,8 @@
 (defvar mf-google-emacs-path (concat mf-home-dir "/gob/dotfiles/emacs/google"))
 (if (and
      (file-readable-p mf-google-emacs-path)
-     (not (eq system-type 'darwin)))
+     (not (eq system-type 'darwin))
+     (not (eq system-type 'windows-nt)))
     (progn
       (add-to-list 'load-path mf-google-emacs-path)
       (require 'mf-google)))
