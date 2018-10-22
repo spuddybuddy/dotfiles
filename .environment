@@ -1,0 +1,88 @@
+# -*-Mode: Shell-script;-*-
+
+# a minimal set of environment variables that allows, e.g. cron scripts to run.
+# this is designed to be sourced once at login, so that all shells inherit
+# these settings.
+
+# author: mfoltz
+
+if [ -z "$MFOLTZ_ENVIRONMENT_WAS_SOURCED" ]; then
+
+echo "$(date) Executing $HOME/.environment" >> $HOME/logs/login.log
+
+########### Unix variables.
+
+# these should be set for us, but sometimes they are not.
+
+[ -z "$USER" ] && export USER="mfoltz"
+[ -z "$HOST" ] && export HOST=`hostname`
+
+# normally, I would defer to the platform setting, but leaving these to
+# chance causes all sorts of gnarliness
+
+export LANG="en_US.UTF-8"
+export TZ="America/Los_Angeles"
+
+# Figure out what OS we are on
+export OS="$(uname)"
+
+########### Emacs
+
+export EDITOR="$HOME/bin/mfedit"
+export VISUAL="$HOME/bin/mfedit"
+
+########### Chromium
+
+export CHROMIUM_ROOT="$HOME/chrome"
+export CHROMIUM_SRC="$CHROMIUM_ROOT/src"
+export CLANKIUM_SRC="$HOME/clank"
+export CHROME_DEVEL_SANDBOX="/usr/local/sbin/chrome-devel-sandbox"
+export LLVM_SYMBOLIZER_PATH="third_party/llvm-build/Release+Asserts/bin/llvm-symbolizer"
+unset CC CXX
+
+########### $PATH
+local mypath_pre=""
+function add_to_path_pre() {
+  if [ -d $1 ]; then
+    if [ -z "$mypath_pre" ]; then
+      mypath_pre="$1"
+    else
+      mypath_pre="$mypath_pre:$1"
+    fi
+  fi
+}
+local mypath_post=""
+function add_to_path_post() {
+  if [ -d $1 ]; then
+    if [ -z "$mypath_post" ]; then
+      mypath_post="$1"
+    else
+      mypath_post="$mypath_post:$1"
+    fi
+  fi
+}
+
+# Ruby 2.4.1
+add_to_path_post $HOME/github/spuddybuddy/dotfiles/bin
+
+# Chrome related
+add_to_path_pre $CHROMIUM_ROOT/depot_tools
+add_to_path_post $CHROMIUM_SRC/third_party/llvm-build/Release+Asserts/bin
+
+# Android tools
+add_to_path_post $HOME/android/android-sdk-linux/platform-tools
+
+# Appengine tools
+add_to_path_post $HOME/google_appengine
+
+# Locally built binaries on OS X
+if [ $OS == 'Darwin' ]; then
+    add_to_path_post /opt/local/bin
+fi
+[ -n "$mypath_pre" ] && export PATH="$mypath_pre:$PATH"
+[ -n "$mypath_post" ] && export PATH="$PATH:$mypath_post"
+
+# kilroy was here - don't run more than once.
+export MFOLTZ_ENVIRONMENT_WAS_SOURCED="true"
+
+fi

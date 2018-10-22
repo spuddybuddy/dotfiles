@@ -1,0 +1,22 @@
+#!/bin/bash
+# -*- Mode: Shell-script; -*-
+#
+# This is a small wrapper to run emacsclient.
+# --create-frame tells emacs to open a new frame.
+# --alternate-editor launches emacs in daemon mode if it isn't already running.
+
+emacsclient="/usr/bin/emacsclient"
+emacs_osx="/Applications/Emacs.app/Contents/MacOS/bin/";
+[ -x "$emacs_osx/emacsclient" ] && emacsclient="$emacs_osx/emacsclient";
+    
+args="--create-frame --alternate-editor="
+if [ -z "$DISPLAY" ]; then
+  args="$args --tty"
+else 
+  # Read a dotfile to see what display I'm on.
+  if [ -f "$HOME/.xdisplay" ]; then
+    args="$args --display=$(cat $HOME/.xdisplay)"
+  fi
+fi
+
+exec $emacsclient $args $*
