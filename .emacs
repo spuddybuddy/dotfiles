@@ -146,5 +146,19 @@
     (set-face-attribute 'default nil :foundry "Outline" :family "Consolas")
     (set-frame-font "Consolas-11.5" nil t)))
 
+;; Hack to detect Crostini (Linux-on-Pixelbook).  Need to do better to detect
+;; screen dpi.
+(when (equal (system-name) "penguin")
+  (progn
+    (set-face-attribute 'default nil :height 160)
+    (setq default-frame-alist
+          '((tool-bar-lines . 0)
+            (menu-bar-lines . 0)
+            (width . 102)
+            (height . 48)
+            (cursor-color . "gold1")
+            (pointer-color . "gold1")
+            (vertical-scroll-bars . right)))))
+
 ;; Always start the server.
 (server-start)
