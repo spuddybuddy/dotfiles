@@ -1,14 +1,9 @@
 # Executed on login
 
-echo "$(date) Executing $HOME/.bash_profile" > $HOME/logs/login.log
-
-# TODO: Redirect stdout/stderr to log
-
-# Take a big dump.
-ulimit -c unlimited
-
-# Set umask appropriately.
-umask 022
+# Usage: source_if_readable <file>
+function source_if_readable() {
+  [ -r $1 ] && source $1
+}
 
 # Usage: create_local <dir>
 #
@@ -27,3 +22,15 @@ function create_local() {
 # because some programs expect them to exist, and misbehave if they do not.
 create_local tmp
 create_local logs
+
+source_if_readable $HOME/.bash_logging
+
+echo "$(date) Executing $HOME/.bash_profile"
+
+# Take a big dump.
+ulimit -c unlimited
+
+# Set umask appropriately.
+umask 022
+
+[ -d $HOME/gob/dotfiles ] && source $HOME/gob/dotfiles/.bash_profile
