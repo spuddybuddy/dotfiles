@@ -8,7 +8,7 @@
 
 if [ -z "$MFOLTZ_ENVIRONMENT_WAS_SOURCED" ]; then
 
-echo "$(date) Executing $HOME/.environment" >> $HOME/logs/login.log
+echo "$(date) Executing $HOME/.environment"
 
 ########### Unix variables.
 

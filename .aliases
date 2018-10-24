@@ -1,6 +1,6 @@
 #-*- Mode: Shell-script; -*-
 
-echo "$(date) Executing $HOME/.aliases" >> $HOME/logs/login.log
+echo "$(date) Executing $HOME/.aliases"
 
 # basics.
 alias ls='ls -F'

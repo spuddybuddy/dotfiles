@@ -1,0 +1,5 @@
+#-*- Mode: Shell-script; -*-
+
+local logfile="$HOME/logs/login-$(date '%Y%M%d-%H%M%s').log"
+exec 1>$logfile
+exec 2>&1
