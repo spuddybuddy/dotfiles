@@ -21,7 +21,11 @@
  '(auto-revert-verbose nil)
  '(blink-cursor-mode nil)
  '(c-basic-offset 2)
- '(c-offsets-alist (quote ((access-label . -1) (arglist-intro . 4) (innamespace . 0))))
+ '(c-offsets-alist
+   (quote
+    ((access-label . -1)
+     (arglist-intro . 4)
+     (innamespace . 0))))
  '(column-number-mode t)
  '(comment-fill-column 80)
  '(compilation-skip-threshold 2)
@@ -33,8 +37,7 @@
       (width . 102)
       (height . 69)
       (cursor-color . "gold1")
-      (pointer-color . "gold1")
-      (vertical-scroll-bars . right))))
+      (pointer-color . "gold1"))))
  '(dirtrack-list (quote ("\\[[A-Za-z@-]+ \\([^]]+\\)\\]\\$" 1)))
  '(display-time-24hr-format t)
  '(display-time-mail-file (quote none))
@@ -62,7 +65,6 @@
  '(ns-alternate-modifier (quote super))
  '(ns-command-modifier (quote meta))
  '(py-indent-offset 2 t)
- '(python-indent 2)
  '(python-indent-offset 2)
  '(scroll-bar-mode (quote right))
  '(sh-basic-offset 2)
@@ -75,7 +77,12 @@
  '(warning-suppress-types nil)
  '(which-func-modes t)
  '(which-function-mode t)
- '(whitespace-modes (quote (ada-mode asm-mode autoconf-mode awk-mode c-mode c++-mode cc-mode change-log-mode cperl-mode electric-nroff-mode emacs-lisp-mode f90-mode fortran-mode html-mode html3-mode java-mode jde-mode ksh-mode latex-mode LaTeX-mode lisp-mode m4-mode makefile-mode modula-2-mode nroff-mode objc-mode pascal-mode perl-mode prolog-mode python-mode scheme-mode sgml-mode sh-mode shell-script-mode simula-mode tcl-mode tex-mode texinfo-mode vrml-mode xml-mode javascript-mode css-mode nxml-mode))))
+ '(whitespace-modes
+   (quote
+    (ada-mode asm-mode autoconf-mode awk-mode c-mode c++-mode cc-mode change-log-mode cperl-mode electric-nroff-mode emacs-lisp-mode f90-mode fortran-mode html-mode html3-mode java-mode jde-mode ksh-mode latex-mode LaTeX-mode lisp-mode m4-mode makefile-mode modula-2-mode nroff-mode objc-mode pascal-mode perl-mode prolog-mode python-mode scheme-mode sgml-mode sh-mode shell-script-mode simula-mode tcl-mode tex-mode texinfo-mode vrml-mode xml-mode javascript-mode css-mode nxml-mode)))
+ '(whitespace-style
+   (quote
+    (face trailing tabs lines-tail newline empty space-after-tab space-before-tab))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
