@@ -29,7 +29,7 @@ create_local logs
 
 source_if_readable $HOME/.bash_logging
 
-log "$(date) Executing $HOME/.bash_profile"
+log "Executing $HOME/.bash_profile"
 
 # Take a big dump.
 ulimit -c unlimited

@@ -4,11 +4,9 @@
 
 if [ -z "$MFOLTZ_LOGGING_WAS_SOURCED" ]; then
 
-local logfile="$HOME/logs/login-$(date '%Y%M%d-%H%M%s').log"
-exec 2>$logfile
-
+export MFOLTZ_LOG=$HOME/logs/login-$(date '+%Y%m%d-%H%M%S').log
 function log() {
-  >&2 echo $1
+  echo "$(date '+%Y%m%d-%H:%M:%S') $1" >> $MFOLTZ_LOG
 }
 
 # kilroy was here - don't run more than once.
