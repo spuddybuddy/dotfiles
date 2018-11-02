@@ -1,5 +1,17 @@
 #-*- Mode: Shell-script; -*-
+# author: mark a. foltz <spuddybuddy@ubertuber.org>
+# https://github.com/spuddybuddy/dotfiles
+
+if [ -z "$MFOLTZ_LOGGING_WAS_SOURCED" ]; then
 
 local logfile="$HOME/logs/login-$(date '%Y%M%d-%H%M%s').log"
-exec 1>$logfile
-exec 2>&1
+exec 2>$logfile
+
+function log() {
+  >&2 echo $1
+}
+
+# kilroy was here - don't run more than once.
+export MFOLTZ_LOGGING_WAS_SOURCED="true"
+
+fi

@@ -1,14 +1,15 @@
 # -*-Mode: Shell-script;-*-
+# Sourced for every shell.
+# author: mark a. foltz <spuddybuddy@ubertuber.org>
+# https://github.com/spuddybuddy/dotfiles
 
 # a minimal set of environment variables that allows, e.g. cron scripts to run.
 # this is designed to be sourced once at login, so that all shells inherit
 # these settings.
 
-# author: mfoltz
-
 if [ -z "$MFOLTZ_ENVIRONMENT_WAS_SOURCED" ]; then
 
-echo "$(date) Executing $HOME/.environment"
+log "$(date) Executing $HOME/.environment"
 
 ########### Unix variables.
 
@@ -35,8 +36,6 @@ export VISUAL="$HOME/bin/mfedit"
 
 export CHROMIUM_ROOT="$HOME/chrome"
 export CHROMIUM_SRC="$CHROMIUM_ROOT/src"
-export CLANKIUM_SRC="$HOME/clank"
-export CHROME_DEVEL_SANDBOX="/usr/local/sbin/chrome-devel-sandbox"
 export LLVM_SYMBOLIZER_PATH="third_party/llvm-build/Release+Asserts/bin/llvm-symbolizer"
 unset CC CXX
 
@@ -79,6 +78,9 @@ add_to_path_post $HOME/google_appengine
 if [ $OS == 'Darwin' ]; then
     add_to_path_post /opt/local/bin
 fi
+
+source_if_readable $HOME/gob/dotfiles/.environment
+
 [ -n "$mypath_pre" ] && export PATH="$mypath_pre:$PATH"
 [ -n "$mypath_post" ] && export PATH="$PATH:$mypath_post"
 

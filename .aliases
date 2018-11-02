@@ -1,6 +1,8 @@
 #-*- Mode: Shell-script; -*-
+# author: mark a. foltz <spuddybuddy@ubertuber.org>
+# https://github.com/spuddybuddy/dotfiles
 
-echo "$(date) Executing $HOME/.aliases"
+log "$(date) Executing $HOME/.aliases"
 
 # basics.
 alias ls='ls -F'

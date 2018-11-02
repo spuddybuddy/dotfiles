@@ -1,8 +1,7 @@
 ;;; .emacs --- Emacs initialization file.
 ;;; Author: mark a. foltz (spuddybuddy@ubertuber.org)
 ;;; Maintainer: mark a. foltz (spuddybuddy@ubertuber.org)
-;;; http://ubertuber.org/
-;;; https://github.com/spuddybuddy
+;;; https://github.com/spuddybuddy/dotfiles
 ;;; hacked on continuously from 1992 - today
 
 (defvar mf-home-dir (getenv "HOME"))

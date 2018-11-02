@@ -1,4 +1,8 @@
-# Executed on login
+#-*- Mode: Shell-script; -*-
+# author: mark a. foltz <spuddybuddy@ubertuber.org>
+# https://github.com/spuddybuddy/dotfiles
+
+# Executed on login.
 
 # Usage: source_if_readable <file>
 function source_if_readable() {
@@ -25,7 +29,7 @@ create_local logs
 
 source_if_readable $HOME/.bash_logging
 
-echo "$(date) Executing $HOME/.bash_profile"
+log "$(date) Executing $HOME/.bash_profile"
 
 # Take a big dump.
 ulimit -c unlimited
@@ -33,4 +37,7 @@ ulimit -c unlimited
 # Set umask appropriately.
 umask 022
 
-[ -d $HOME/gob/dotfiles ] && source $HOME/gob/dotfiles/.bash_profile
+source_if_readable $HOME/gob/dotfiles/.bash_profile
+source_if_readable $HOME/.bashrc
+source_if_readable $HOME/gob/dotfiles/goma.sh
+
