@@ -2,14 +2,10 @@
 # author: mark a. foltz <spuddybuddy@ubertuber.org>
 # https://github.com/spuddybuddy/dotfiles
 
-if [ -z "$MFOLTZ_LOGGING_WAS_SOURCED" ]; then
+if [ -z "$MFOLTZ_LOG" ]; then
+  export MFOLTZ_LOG=$HOME/logs/login-$(date '+%Y%m%d-%H%M%S').log
+fi
 
-export MFOLTZ_LOG=$HOME/logs/login-$(date '+%Y%m%d-%H%M%S').log
 function log() {
   echo "$(date '+%Y%m%d-%H:%M:%S') $1" >> $MFOLTZ_LOG
 }
-
-# kilroy was here - don't run more than once.
-export MFOLTZ_LOGGING_WAS_SOURCED="true"
-
-fi
