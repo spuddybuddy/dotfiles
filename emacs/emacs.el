@@ -49,6 +49,9 @@
 ;; (autoload 'javascript-mode "javascript" nil t)
 ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
 
+;; Bikeshed
+(add-to-list 'auto-mode-alist '("\\.bs\\'" . markdown-mode))
+
 ;; shell-mode hook.
 ;; Enable directory tracking that actually works by parsing the shell prompt.
 (require 'dirtrack)

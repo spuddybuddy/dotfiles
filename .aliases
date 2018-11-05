@@ -32,5 +32,6 @@ function httpd() {
   python -m SimpleHTTPServer $1 2>&1 & > "$HOME/logs/SimpleHttpServer.$(date '%Y%M%d-%H%M%s').log"
 }
 
+source_if_readable $HOME/gob/dotfiles/.aliases
 
 
