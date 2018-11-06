@@ -43,11 +43,9 @@
 (define-key text-mode-map [M-up] 'forward-sentence)
 (define-key text-mode-map [M-down] 'backward-sentence)
 
-;; javascript mode
-;; TODO: Install/enable js2-mode
-;; (mf-delete-auto-mode 'javascript-generic-mode)
-;; (autoload 'javascript-mode "javascript" nil t)
-;; (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
+;; js2 mode
+;;(mf-delete-auto-mode 'javascript-mode)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 
 ;; Bikeshed
 (add-to-list 'auto-mode-alist '("\\.bs\\'" . markdown-mode))
@@ -60,6 +58,13 @@
             (setq shell-dirtrack-mode nil)
             (dirtrack-mode)))
 
+;; MELPA packages.
+;; Documentation: https://stable.melpa.org/
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(package-initialize)
+
 ;;;;;;;;;;;;;;;;;;;;;; google specific stuff (at the end)
 ;; TODO: Figure out how to use Google site-lisp on Mac
 (defvar mf-google-emacs-path (concat mf-home-dir "/gob/dotfiles/emacs/google"))
@@ -70,5 +75,6 @@
     (progn
       (add-to-list 'load-path mf-google-emacs-path)
       (require 'mf-google)))
+
 
 (provide 'mf-emacs)
