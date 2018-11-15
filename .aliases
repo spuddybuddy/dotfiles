@@ -2,7 +2,7 @@
 # author: mark a. foltz <spuddybuddy@ubertuber.org>
 # https://github.com/spuddybuddy/dotfiles
 
-log "Executing $HOME/.aliases"
+mf_log "Executing $HOME/.aliases"
 
 # basics.
 alias ls='ls -F'

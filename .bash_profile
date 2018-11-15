@@ -29,10 +29,12 @@ create_local logs
 
 source_if_readable $HOME/.bash_logging
 
-log "Executing $HOME/.bash_profile"
+mf_log "Executing $HOME/.bash_profile"
 
 # Take a big dump.
 ulimit -c unlimited
+ulimit -n 262144
+ulimit -u 2500
 
 # Set umask appropriately.
 umask 022

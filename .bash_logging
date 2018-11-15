@@ -6,6 +6,6 @@ if [ -z "$MFOLTZ_LOG" ]; then
   export MFOLTZ_LOG=$HOME/logs/login-$(date '+%Y%m%d-%H%M%S').log
 fi
 
-function log() {
+function mf_log() {
   echo "$(date '+%Y%m%d-%H:%M:%S') $1" >> $MFOLTZ_LOG
 }

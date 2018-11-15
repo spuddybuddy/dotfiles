@@ -9,7 +9,7 @@
 
 if [ -z "$MFOLTZ_ENVIRONMENT_WAS_SOURCED" ]; then
 
-log "Executing $HOME/.environment"
+mf_log "Executing $HOME/.environment"
 
 ########### Unix variables.
 

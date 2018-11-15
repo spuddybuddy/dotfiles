@@ -10,7 +10,7 @@ function source_if_readable() {
 
 source_if_readable $HOME/.bash_logging
 
-log "Executing $HOME/.bashrc"
+mf_log "Executing $HOME/.bashrc"
 
 # environment setup
 source_if_readable $HOME/.environment
