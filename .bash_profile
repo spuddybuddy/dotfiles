@@ -27,7 +27,7 @@ function create_local() {
 create_local tmp
 create_local logs
 
-source_if_readable $HOME/.bash_logging
+source_if_readable $HOME/github/spuddybuddy/dotfiles/bash_logging.sh
 
 mf_log "Executing $HOME/.bash_profile"
 

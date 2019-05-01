@@ -8,17 +8,17 @@ function source_if_readable() {
   [ -r $1 ] && source $1
 }
 
-source_if_readable $HOME/.bash_logging
+source_if_readable $HOME/github/spuddybuddy/dotfiles/bash_logging.sh
 
 mf_log "Executing $HOME/.bashrc"
 
 # environment setup
-source_if_readable $HOME/.environment
+source_if_readable $HOME/github/spuddybuddy/dotfiles/environment.sh
 
 # Source functions and aliases, if we are in an interactive shell.
 if [ -n "${PS1}"  ]; then
   source_if_readable /etc/bash_completion
-  source_if_readable $HOME/.aliases
+  source_if_readable $HOME/github/spuddybuddy/dotfiles/aliases.sh
   
   # Set the prompt to something reasonable.
   export PROMPT_COMMAND=myprompt
