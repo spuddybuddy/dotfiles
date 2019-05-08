@@ -33,8 +33,6 @@ mf_log "Executing $HOME/.bash_profile"
 
 # Take a big dump.
 ulimit -c unlimited
-# Ensure we have the maximum process limit.
-ulimit -u 2500
 
 # Set umask appropriately.
 umask 022
