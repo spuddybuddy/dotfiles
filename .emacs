@@ -95,7 +95,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "#202020" :foreground "wheat2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 110 :width normal :foundry "bitstream" :family "Bitstream Vera Sans Mono"))))
+ '(default ((t (:inherit nil :stipple nil :background "#202020" :foreground "wheat2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 170 :width normal :foundry "nil" :family "Andale Mono"))))
  '(comint-highlight-prompt ((t (:foreground "gold1" :weight bold))))
  '(custom-comment ((t (:background "black"))))
  '(custom-group-tag ((((min-colors 88) (class color) (background light)) (:inherit variable-pitch :foreground "SkyBlue" :weight bold :height 1.2))))
@@ -137,23 +137,6 @@
  '(widget-single-line-field ((((class grayscale color) (background light)) (:background "gray15")))))
 (put 'upcase-region 'disabled nil)
 (put 'erase-buffer 'disabled nil)
-;; Replace fonts for Mac OS X.
-(when (eq system-type 'darwin)
-  ;; default Latin font (e.g. Andale Mono)
-  ;; WARNING!  Depending on the default font,
-  ;; if the size is not supported very well, the frame will be clipped
-  ;; so that the beginning of the buffer may not be visible correctly.
-  (defun mf-fix-mac-fonts (frame) 
-    (set-face-attribute 'default nil
-                        :family "Andale Mono"
-                        :foundry nil
-                        :height 140))
-  (mf-fix-mac-fonts nil)
-  ;; HACK: set-face-attribute should set these values globally.  This is broken
-  ;; as of Emacs 24.5.  Set per-frame face defaults as a hook, instead.
-  ;; TODO: Still necessary?
-  (add-to-list 'after-make-frame-functions 'mf-fix-mac-fonts)
-  )
 
 (when (eq system-type 'windows-nt)
   (progn
