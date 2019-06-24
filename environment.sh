@@ -35,6 +35,7 @@ export VISUAL="$HOME/bin/mfedit"
 ########### Chromium
 
 export CHROMIUM_ROOT="$HOME/chrome"
+export OPENSCREEN_ROOT="$HOME/openscreen"
 export CHROMIUM_SRC="$CHROMIUM_ROOT/src"
 export LLVM_SYMBOLIZER_PATH="third_party/llvm-build/Release+Asserts/bin/llvm-symbolizer"
 unset CC CXX
@@ -70,15 +71,20 @@ function add_to_path_post() {
   fi
 }
 
-# Ruby 2.4.1
+# Personal scripts
 add_to_path_post $HOME/github/spuddybuddy/dotfiles/bin
 
 # Chrome related
 add_to_path_pre $CHROMIUM_ROOT/depot_tools
+# Sometimes, depot_tools is checked out into $HOME.
+add_to_path_pre $HOME/depot_tools
+
 # Add the path to Chromium buildtools before depot_tools, so they can be used
 # outside of $CHROMIUM_ROOT.  Used for gn and clang-format
 add_to_path_pre $CHROMIUM_SRC/buildtools/$chromium_buildtools_platform
 add_to_path_post $CHROMIUM_SRC/third_party/llvm-build/Release+Asserts/bin
+
+# TODO: Add openscreen buildtools to $PATH if they are not found in $CHROMIUM_SRC
 
 # Android tools
 add_to_path_post $HOME/android/android-sdk-linux/platform-tools
