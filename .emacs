@@ -147,7 +147,10 @@
 ;; screen dpi.
 (when (equal (system-name) "penguin")
   (progn
-    (set-face-attribute 'default nil :height 160)
+    (set-face-attribute 'default nil :family "Bitstream Vera Sans Mono")
+    (set-face-attribute 'default nil :foundry "Bitstream")
+    (set-face-attribute 'default nil :width "normal")    
+    (set-face-attribute 'default nil :height 140)
     (setq default-frame-alist
           '((tool-bar-lines . 0)
             (menu-bar-lines . 0)
