@@ -151,7 +151,7 @@
                              :foundry "Bitstream"
                              :width 'normal
                              :size 19))
-        (default-fontset "-bitstream-Bitstream Vera Sans Mono-normal-normal-normal-*-19-*-*-*-m-0-fontset-auto3"))
+        (default-fontset "-bitstream-Bitstream Vera Sans Mono-normal-normal-normal-*-19-*-*-*-*-*-*"))
     (progn
       (set-face-font 'default default-font-spec nil)
       (set-frame-font default-font-spec t nil)
