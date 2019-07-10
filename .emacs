@@ -143,22 +143,36 @@
     (set-face-attribute 'default nil :foundry "Outline" :family "Consolas")
     (set-frame-font "Consolas-11.5" nil t)))
 
-;; Hack to detect Crostini (Linux-on-Pixelbook).  Need to do better to detect
+;; Hack to detect Crostini (Linux-on-ChromeOS).  Need to do better to detect
 ;; screen dpi.
 (when (equal (system-name) "penguin")
-  (progn
-    (set-face-attribute 'default nil :family "Bitstream Vera Sans Mono")
-    (set-face-attribute 'default nil :foundry "Bitstream")
-    (set-face-attribute 'default nil :width "normal")    
-    (set-face-attribute 'default nil :height 140)
-    (setq default-frame-alist
-          '((tool-bar-lines . 0)
-            (menu-bar-lines . 0)
-            (width . 102)
-            (height . 48)
-            (cursor-color . "gold1")
-            (pointer-color . "gold1")
-            (vertical-scroll-bars . right)))))
+  (let ((default-font-spec (font-spec 
+                             :family "Bitstream Vera Sans Mono"
+                             :foundry "Bitstream"
+                             :width 'normal
+                             :size 19))
+        (default-fontset "-bitstream-Bitstream Vera Sans Mono-normal-normal-normal-*-19-*-*-*-m-0-fontset-auto3"))
+    (progn
+      (set-face-font 'default default-font-spec nil)
+      (set-frame-font default-font-spec t nil)
+      (setq default-frame-alist
+            `((tool-bar-lines . 0)
+              (menu-bar-lines . 0)
+              (width . 102)
+              (height . 48)
+              (cursor-color . "gold1")
+              (pointer-color . "gold1")
+              (vertical-scroll-bars . right)
+              (font . ,default-fontset)))
+      (setq initial-frame-alist
+            `((tool-bar-lines . 0)
+              (menu-bar-lines . 0)
+              (width . 102)
+              (height . 48)
+              (cursor-color . "gold1")
+              (pointer-color . "gold1")
+              (vertical-scroll-bars . right)
+              (font . ,default-fontset))))))
 
 ;; Always start the server.
 (server-start)
