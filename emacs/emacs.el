@@ -65,6 +65,14 @@
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 (package-initialize)
 
+;; GN-mode
+(defvar mf-gn-emacs-path (concat mf-home-dir "/gn/misc/emacs"))
+
+(if (file-readable-p mf-gn-emacs-path)
+    (progn
+      (add-to-list 'load-path mf-gn-emacs-path)
+      (require 'gn-mode)))
+
 ;;;;;;;;;;;;;;;;;;;;;; google specific stuff (at the end)
 ;; TODO: Figure out how to use Google site-lisp on Mac
 (defvar mf-google-emacs-path (concat mf-home-dir "/gob/dotfiles/emacs/google"))
@@ -75,6 +83,5 @@
     (progn
       (add-to-list 'load-path mf-google-emacs-path)
       (require 'mf-google)))
-
 
 (provide 'mf-emacs)
