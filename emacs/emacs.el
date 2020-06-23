@@ -66,6 +66,7 @@
 (package-initialize)
 
 ;; GN-mode
+;; TODO: Mirror this so it's available everywhere.
 (defvar mf-gn-emacs-path (concat mf-home-dir "/gn/misc/emacs"))
 
 (if (file-readable-p mf-gn-emacs-path)
@@ -74,14 +75,18 @@
       (require 'gn-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;; google specific stuff (at the end)
-;; TODO: Figure out how to use Google site-lisp on Mac
+
 (defvar mf-google-emacs-path (concat mf-home-dir "/gob/dotfiles/emacs/google"))
 (if (and
-     (file-readable-p mf-google-emacs-path)
      (not (eq system-type 'darwin))
      (not (eq system-type 'windows-nt)))
-    (progn
-      (add-to-list 'load-path mf-google-emacs-path)
-      (require 'mf-google)))
+    (cond ((file-readable-p mf-google-emacs-path)
+           (progn
+             (add-to-list 'load-path mf-google-emacs-path)
+             (require 'mf-google)))
+          ((file-readable-p "/usr/local/google")
+           ;; Looks like gLinux; we don't have my Google elisp, but do
+           ;; have generic Google elisp.
+           (require 'google))))
 
 (provide 'mf-emacs)
