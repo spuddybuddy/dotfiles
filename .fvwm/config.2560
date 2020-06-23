@@ -1,0 +1,35 @@
+# -*- Mode: fvwm-generic; -*-
+# mark a. foltz <mfoltz@google.com>
+
+# Functions for handling Emacs windows on a 30" (2560x1600) monitor.
+
+AddToFunc MyMaximizeEmacsLeft
++ I Focus
++ I Raise
++ I Move 0p 0p
++ I Resize 1116p 1547p
++ I WarpToWindow 50 7p
+
+AddToFunc MyMaximizeEmacsRight
++ I Focus
++ I Raise
++ I Move 1120p 0p
++ I Resize 1116p 1547p
++ I WarpToWindow 50 7p
+
+# For reasons that remain obscure, the window geometry that FVWM picks up for
+# Chrome is not the true geometry.
+
+AddToFunc MyNormalizeChrome
++ I Focus
++ I Raise
++ I Move 0p 0p
++ I Resize 1270p 1598p
++ I WarpToWindow 50 100p
+
+AddToFunc MyMaximizeChrome
++ I Focus
++ I Raise
++ I Move 0p 0p
++ I Resize 2100p 1598p
++ I WarpToWindow 50 100p
