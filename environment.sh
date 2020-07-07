@@ -99,6 +99,9 @@ add_to_path_post $HOME/google_appengine
 # https://cloud.google.com/storage/docs/gsutil_install
 add_to_path_post $HOME/gsutil
 
+# Scripts installed by pip (Python).  Mostly for bikeshed
+add_to_path_post $HOME/.local/bin
+
 # Locally built binaries on OS X
 if [ $OS == 'Darwin' ]; then
     add_to_path_post /opt/local/bin
