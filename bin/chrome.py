@@ -3,6 +3,7 @@
 import datetime
 import getopt
 import os
+import subprocess
 import sys
 
 # Features to enable
@@ -33,14 +34,20 @@ def RunChrome(channel, extra_args):
       "--enable-features=" + ",".join(CHROME_FEATURES),
       "--user-data-dir=" + os.path.join(home, CHROME_USER_DIRS[channel]),
       ] + extra_args
-  log_file = open(os.path.join(home,
-                               "logs",
-                               "google-chrome-" + channel + "-" +
-                               datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".log"),
-                  'w')
-  sys.stdout = log_file
-  sys.stderr = log_file
+
+  # I go low-level here with the os module since I couldn't find another way to
+  # redirect stdout/stderr and then exec Chrome.  subprocess.run makes this much
+  # easier, but it spawns Chrome as a child process and there's no need to keep
+  # this Python process around.
+  logfile_name = os.path.join(home,
+                              "logs",
+                              "google-chrome-" + channel + "-" +
+                              datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".log")
+  os.mknod(logfile_name)
+  logfile_fd = os.open(logfile_name, os.O_WRONLY)
   chrome_path = os.path.join(CHROME_PATHS[channel], "chrome")
+  os.dup2(logfile_fd, 1)  # 1=STDOUT
+  os.dup2(logfile_fd, 2)  # 2=STDERR
   print (chrome_path, " ".join(chrome_args))
   os.execv(chrome_path, chrome_args)
 
@@ -48,7 +55,7 @@ def RunChrome(channel, extra_args):
 def main(argv):
   try:
     channel = "stable"
-    opts, args = getopt.getopt(argv,"c:",["channel"])
+    opts, args = getopt.getopt(argv,"c:",["channel="])
     for opt, value in opts:
       if opt in ("-c", "--channel"):
         channel = value
