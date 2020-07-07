@@ -29,7 +29,6 @@ def RunChrome(channel, extra_args):
       "--enable-logging",
       "--also-log-to-stderr",
       "--no-proxy-server",
-      "--v=1",
       "--show-component-extension-options",
       "--enable-features=" + ",".join(CHROME_FEATURES),
       "--user-data-dir=" + os.path.join(home, CHROME_USER_DIRS[channel]),
@@ -48,7 +47,7 @@ def RunChrome(channel, extra_args):
   chrome_path = os.path.join(CHROME_PATHS[channel], "chrome")
   os.dup2(logfile_fd, 1)  # 1=STDOUT
   os.dup2(logfile_fd, 2)  # 2=STDERR
-  print (chrome_path, " ".join(chrome_args))
+  os.write(logfile_fd, bytes(chrome_path + " ".join(chrome_args) + "\n", "utf-8"))
   os.execv(chrome_path, chrome_args)
 
 
