@@ -93,8 +93,8 @@ DestroyMenu /Root
 AddToMenu /Root
 +  "xterm"          Exec exec /usr/bin/rxvt -fn $RXVT_FONT +sb -cr blue -fg WhiteSmoke -bg Gray25 -e /bin/bash -i
 +  "emacs"          Exec exec mfedit
-+  "chrome"         Exec exec chrome.sh --channel=beta
-+  "chrome dev"     Exec exec chrome.sh --channel=dev
++  "chrome"         Exec exec chrome.py --channel=beta
++  "chrome dev"     Exec exec chrome.py --channel=dev
 +  "VLC"            Exec exec vlc
 +  "gimp"           Exec exec gimp
 +  "controls"       Exec exec cinnamon-control-center
