@@ -1,13 +1,10 @@
 #!/usr/bin/python3
 
-import datetime
 import getopt
 import os
-import subprocess
 import sys
 
-# Features to enable
-CHROME_FEATURES = ["CastMediaRouteProvider", "GlobalMediaControlsForCast"]
+import chrome_common
 
 # Where the Chrome binary lives
 CHROME_PATHS = {
@@ -16,6 +13,7 @@ CHROME_PATHS = {
     "dev":    "/opt/google/chrome-unstable"
 }
 
+
 # Where Chrome profile data lives, relative to $HOME
 CHROME_USER_DIRS = {
     "stable": ".config/google-chrome",
@@ -23,44 +21,32 @@ CHROME_USER_DIRS = {
     "dev":    ".config/google-chrome-unstable"
 }
 
-def RunChrome(channel, extra_args):
-  home = os.getenv("HOME")
-  chrome_args = [
-      "--enable-logging",
-      "--also-log-to-stderr",
-      "--no-proxy-server",
-      "--show-component-extension-options",
-      "--enable-features=" + ",".join(CHROME_FEATURES),
-      "--user-data-dir=" + os.path.join(home, CHROME_USER_DIRS[channel]),
-      ] + extra_args
 
-  # I go low-level here with the os module since I couldn't find another way to
-  # redirect stdout/stderr and then exec Chrome.  subprocess.run makes this much
-  # easier, but it spawns Chrome as a child process and there's no need to keep
-  # this Python process around.
-  logfile_name = os.path.join(home,
-                              "logs",
-                              "google-chrome-" + channel + "-" +
-                              datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".log")
-  os.mknod(logfile_name)
-  logfile_fd = os.open(logfile_name, os.O_WRONLY)
-  chrome_path = os.path.join(CHROME_PATHS[channel], "chrome")
-  os.dup2(logfile_fd, 1)  # 1=STDOUT
-  os.dup2(logfile_fd, 2)  # 2=STDERR
-  os.write(logfile_fd, bytes(chrome_path + " ".join(chrome_args) + "\n", "utf-8"))
-  os.execv(chrome_path, chrome_args)
+def RunChromeChannel(channel, extra_args):
+  home = os.getenv("HOME")
+  chrome_common.RunChrome(os.path.join(CHROME_PATHS[channel], "chrome"),
+            channel,
+            chrome_common.CHROME_FEATURES,
+            os.path.join(home, CHROME_USER_DIRS[channel]),
+            [
+                "--enable-logging",
+                "--also-log-to-stderr",
+                "--no-proxy-server",
+                "--show-component-extension-options",
+            ],
+            extra_args)
 
 
 def main(argv):
   try:
     channel = "stable"
-    opts, args = getopt.getopt(argv,"c:",["channel="])
+    opts, extra_args = getopt.getopt(argv,"c:",["channel="])
     for opt, value in opts:
       if opt in ("-c", "--channel"):
         channel = value
         if channel not in CHROME_PATHS.keys():
           raise getopt.GetoptError
-    RunChrome(channel, args)
+    RunChromeChannel(channel, extra_args)
   except getopt.GetoptError:
     print (sys.argv[0], " [-c [stable|beta|dev]]")
     sys.exit(2)
