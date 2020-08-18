@@ -12,8 +12,9 @@ CHROME_FEATURES = ["CastMediaRouteProvider", "GlobalMediaControlsForCast"]
 # args: List of arguments.
 # extra_args: More arguments.
 def RunChrome(path, logname, features, user_dir, args, extra_args = []):
-  home = os.getenv("HOME")
-  chrome_args = args + [
+  # The first element of the argument list is the name of the program being run,
+  # not an actual commandline argument.
+  execv_args = [path] + args + [
       "--enable-features=" + ",".join(features),
       "--user-data-dir=" + user_dir,
       ] + extra_args
@@ -22,6 +23,7 @@ def RunChrome(path, logname, features, user_dir, args, extra_args = []):
   # redirect stdout/stderr and then exec Chrome.  subprocess.run makes this much
   # easier, but it spawns Chrome as a child process and there's no need to keep
   # this Python process around.
+  home = os.getenv("HOME")
   logfile_name = os.path.join(home,
                               "logs",
                               "google-chrome-" + logname + "-" +
@@ -30,5 +32,5 @@ def RunChrome(path, logname, features, user_dir, args, extra_args = []):
   logfile_fd = os.open(logfile_name, os.O_WRONLY)
   os.dup2(logfile_fd, 1)  # 1=STDOUT
   os.dup2(logfile_fd, 2)  # 2=STDERR
-  os.write(logfile_fd, bytes(path + " " + " ".join(chrome_args) + "\n", "utf-8"))
-  os.execv(path, chrome_args)
+  os.write(logfile_fd, bytes(" ".join(execv_args) + "\n", "utf-8"))
+  os.execv(path, execv_args)

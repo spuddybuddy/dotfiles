@@ -13,8 +13,8 @@ VMODULE_PATTERNS = [
     "offscreen_tab*",
 ]
 
-def RunChromeBuild(path, chrome_folder, user_dir, prefix_args, extra_args):
-    vmodule_arg = ",".join([pattern + "=2" for pattern in VMODULE_PATTERNS])
+def RunChromeBuild(path, chrome_folder, user_dir, vmodule, prefix_args, extra_args):
+    vmodule_arg = ",".join([pattern + "=2" for pattern in VMODULE_PATTERNS + vmodule])
     args = prefix_args + [
         "--enable-logging",
         "--also-log-to-stderr",
@@ -34,12 +34,13 @@ def RunChromeBuild(path, chrome_folder, user_dir, prefix_args, extra_args):
 
 
 def PrintUsage():
-    print ("Runs a local Chrome build in $CHROMIUM_SRC/out/<folder>.")
+    print ("Runs a local Chrome build in $CHROMIUM_SRC/out/Default")
     print ("Extra arguments are passed to Chrome.")
-    print ("  -d|--debug:           Run under GDB.")
-    print ("  -c|--clean:           Start with an empty user data dir.")
-    print ("  -x|--extension:       Run without the component extension.")
-    print ("  -b|--build <folder>:  Find Chrome in $CHROMIUM_SRC/out/<folder>.")
+    print ("  -d|--debug:              Run under GDB.")
+    print ("  -c|--clean:              Start with an empty user data dir.")
+    print ("  -x|--extension:          Run without the Media Router component extension.")
+    print ("  -b|--build <folder>:     Find Chrome in $CHROMIUM_SRC/out/<folder>.")
+    print ("  -v|--vmodule <pattern>:  Comma-separated file patterns for verbose logging.")
     print ("Usage: ", sys.argv[0], " [options] extra_args...")
 
 
@@ -49,9 +50,9 @@ def main(argv):
     clean_user_dir = False
     component = True
     build_type = "Default"
-    prefix_args = []
+    vmodule = []
     try:
-        opts, extra_args = getopt.getopt(argv, "dcxb:", ["debug", "clean", "extension", "build="])
+        opts, extra_args = getopt.getopt(argv, "dcxbv:", ["debug", "clean", "extension", "build=", "vmodule="])
         for (option, value) in opts:
             if option in ["-d", "--debug"]:
                 run_gdb = True
@@ -61,6 +62,8 @@ def main(argv):
                 component = False
             elif option in ["-b", "--build"]:
                 build_type = value
+            elif option in ["-v", "--vmodule"]:
+                vmodule = value.split(",")
 
         chrome_folder = os.path.join(build_root, build_type)
         user_dir = os.path.join(chrome_folder, "google-chrome-local")
@@ -71,9 +74,11 @@ def main(argv):
         if run_gdb:
             prefix_args += ["--args", chrome_folder]
             path = "/usr/bin/gdb"
-        if not component:
+        if component:
+            prefix_args += ["--load-media-router-component-extension=1"]
+        else:
             prefix_args += ["--load-media-router-component-extension=0"]
-        RunChromeBuild(path, chrome_folder, user_dir, prefix_args, extra_args)
+        RunChromeBuild(path, chrome_folder, user_dir, vmodule, prefix_args, extra_args)
     except getopt.GetoptError:
         PrintUsage()
         sys.exit(2)
