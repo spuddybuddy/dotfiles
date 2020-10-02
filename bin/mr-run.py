@@ -2,6 +2,7 @@
 
 import getopt
 import os
+import shutil
 import sys
 
 import chrome_common
@@ -31,6 +32,12 @@ def RunChromeBuild(path, chrome_folder, user_dir, vmodule, prefix_args, extra_ar
         user_dir,
         args,
         extra_args)
+
+
+def RemoveUserDir(user_dir):
+    if os.access(user_dir, os.W_OK):
+        print ("Removing %s..." % user_dir)
+        shutil.rmtree(user_dir)
 
 
 def PrintUsage():
