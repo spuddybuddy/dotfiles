@@ -95,7 +95,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "#202020" :foreground "wheat2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 125 :width normal :foundry "MONO" :family "Andale Mono"))))
+ '(default ((t (:inherit nil :stipple nil :background "#202020" :foreground "wheat2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 130 :width normal :foundry "bitstream" :family "Bitstream Vera Sans Mono"))))
  '(comint-highlight-prompt ((t (:foreground "gold1" :weight bold))))
  '(custom-comment ((t (:background "black"))))
  '(custom-group-tag ((((min-colors 88) (class color) (background light)) (:inherit variable-pitch :foreground "SkyBlue" :weight bold :height 1.2))))
@@ -150,7 +150,7 @@
                              :family "Bitstream Vera Sans Mono"
                              :foundry "Bitstream"
                              :width 'normal
-                             :size 19))
+                             :height 160))
         (default-fontset "-bitstream-Bitstream Vera Sans Mono-normal-normal-normal-*-19-*-*-*-*-*-*"))
     (progn
       (set-face-font 'default default-font-spec nil)

@@ -107,10 +107,22 @@ if [ $OS == 'Darwin' ]; then
     add_to_path_post /opt/local/bin
 fi
 
+# pyenv: https://github.com/pyenv/pyenv
+if [ -d $HOME/.pyenv ]; then
+    export PYENV_ROOT="$HOME/.pyenv"
+    add_to_path_pre "$PYENV_ROOT/bin"
+fi
+
 source_if_readable $HOME/gob/dotfiles/.environment
 
 [ -n "$mypath_pre" ] && export PATH="$mypath_pre:$PATH"
 [ -n "$mypath_post" ] && export PATH="$PATH:$mypath_post"
+
+# pyenv prepends shims to $PATH to override the system-wide Python installation.
+# We need Python3 >= 3.7 for Bikeshed.
+if [ "command -v pyenv 1>/dev/null 2>&1" ]; then
+    eval "$(pyenv init -)"
+fi
 
 # kilroy was here - don't run more than once.
 export MFOLTZ_ENVIRONMENT_WAS_SOURCED="true"
