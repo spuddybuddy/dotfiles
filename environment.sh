@@ -120,7 +120,8 @@ source_if_readable $HOME/gob/dotfiles/.environment
 
 # pyenv prepends shims to $PATH to override the system-wide Python installation.
 # We need Python3 >= 3.7 for Bikeshed.
-if [ "command -v pyenv 1>/dev/null 2>&1" ]; then
+command -v pyenv 1>/dev/null 2>&1
+if [ $? -eq 0 ]; then
     eval "$(pyenv init -)"
 fi
 
