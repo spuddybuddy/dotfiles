@@ -87,9 +87,7 @@ add_to_path_post $CHROMIUM_SRC/third_party/llvm-build/Release+Asserts/bin
 # TODO: Add openscreen buildtools to $PATH if they are not found in $CHROMIUM_SRC
 
 # Android tools
-add_to_path_post $HOME/android/android-sdk-linux/platform-tools
-# Sometimes, there are just binaries dropped in a folder (no SDK)
-add_to_path_post $HOME/android
+add_to_path_post $HOME/android/platform-tools
 
 # Appengine tools
 # https://cloud.google.com/appengine/downloads
