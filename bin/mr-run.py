@@ -12,6 +12,7 @@ VMODULE_PATTERNS = [
     "cast_message*"
     "media_r*",
     "offscreen_tab*",
+    "dial*",
 ]
 
 def RunChromeBuild(path, chrome_folder, user_dir, vmodule, prefix_args, extra_args):
