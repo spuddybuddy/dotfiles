@@ -95,7 +95,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "#202020" :foreground "wheat2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 130 :width normal :foundry "bitstream" :family "Bitstream Vera Sans Mono"))))
+ '(default ((t (:inherit nil :stipple nil :background "#202020" :foreground "wheat2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 130 :width normal :foundry "Bits" :family "Bitstream Vera Sans Mono"))))
  '(comint-highlight-prompt ((t (:foreground "gold1" :weight bold))))
  '(custom-comment ((t (:background "black"))))
  '(custom-group-tag ((((min-colors 88) (class color) (background light)) (:inherit variable-pitch :foreground "SkyBlue" :weight bold :height 1.2))))
@@ -142,37 +142,6 @@
   (progn
     (set-face-attribute 'default nil :foundry "Outline" :family "Consolas")
     (set-frame-font "Consolas-11.5" nil t)))
-
-;; Hack to detect Crostini (Linux-on-ChromeOS).  Need to do better to detect
-;; screen dpi.
-(when (equal (system-name) "penguin")
-  (let ((default-font-spec (font-spec 
-                             :family "Bitstream Vera Sans Mono"
-                             :foundry "Bitstream"
-                             :width 'normal
-                             :height 160))
-        (default-fontset "-bitstream-Bitstream Vera Sans Mono-normal-normal-normal-*-19-*-*-*-*-*-*"))
-    (progn
-      (set-face-font 'default default-font-spec nil)
-      (set-frame-font default-font-spec t nil)
-      (setq default-frame-alist
-            `((tool-bar-lines . 0)
-              (menu-bar-lines . 0)
-              (width . 102)
-              (height . 48)
-              (cursor-color . "gold1")
-              (pointer-color . "gold1")
-              (vertical-scroll-bars . right)
-              (font . ,default-fontset)))
-      (setq initial-frame-alist
-            `((tool-bar-lines . 0)
-              (menu-bar-lines . 0)
-              (width . 102)
-              (height . 48)
-              (cursor-color . "gold1")
-              (pointer-color . "gold1")
-              (vertical-scroll-bars . right)
-              (font . ,default-fontset))))))
 
 ;; Always start the server.
 (server-start)
