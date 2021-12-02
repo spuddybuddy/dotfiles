@@ -40,6 +40,3 @@ umask 022
 source_if_readable $HOME/gob/dotfiles/.bash_profile
 source_if_readable $HOME/.bashrc
 source_if_readable $HOME/gob/dotfiles/goma.sh
-
-
-export PATH="$HOME/.cargo/bin:$PATH"

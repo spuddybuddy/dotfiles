@@ -11,10 +11,9 @@ alias ll='ls -lFa'
 alias more=less
 
 # Chromium.
-alias crdebug="./out/Debug/chrome --enable-logging=stderr --user-data-dir=/tmp --v=0 --log-level=1"
-alias crrelease="./out/Release/chrome --enable-logging=stderr --user-data-dir=/tmp --v=0 --log-level=1"
-alias crformat="git clang-format --force --verbose origin/master -- "
-alias layouttest="third_party/WebKit/Tools/Scripts/run-webkit-tests -t Default --details --verbose --full-results-html --driver-logging"
+alias crdebug="./out/debug/chrome --enable-logging=stderr --user-data-dir=/tmp --v=0 --log-level=1"
+alias crrelease="./out/release/chrome --enable-logging=stderr --user-data-dir=/tmp --v=0 --log-level=1"
+alias crformat="git clang-format --force --verbose origin/main -- "
 
 ### !!! ACHTUNG !!!
 ### If you change this, update the dirtrack-list regexp in .emacs so
@@ -33,5 +32,3 @@ function httpd() {
 }
 
 source_if_readable $HOME/gob/dotfiles/.aliases
-
-

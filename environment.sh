@@ -48,9 +48,13 @@ elif [ $OS == 'Darwin' ]; then
   chromium_buildtools_platform='mac'
 fi
 
+########### Chrome Remote Desktop
+
+# Set the host desktop to match native monitor resolution.
+export CHROME_REMOTE_DESKTOP_DEFAULT_DESKTOP_SIZES="3840x2160"
 
 ########### $PATH
-local mypath_pre=""
+mypath_pre=""
 function add_to_path_pre() {
   if [ -d $1 ]; then
     if [ -z "$mypath_pre" ]; then
@@ -60,7 +64,7 @@ function add_to_path_pre() {
     fi
   fi
 }
-local mypath_post=""
+mypath_post=""
 function add_to_path_post() {
   if [ -d $1 ]; then
     if [ -z "$mypath_post" ]; then
@@ -74,14 +78,9 @@ function add_to_path_post() {
 # Personal scripts
 add_to_path_post $HOME/github/spuddybuddy/dotfiles/bin
 
-# Chrome related
-add_to_path_pre $CHROMIUM_ROOT/depot_tools
 # Sometimes, depot_tools is checked out into $HOME.
-add_to_path_pre $HOME/depot_tools
+add_to_path_post $HOME/depot_tools
 
-# Add the path to Chromium buildtools before depot_tools, so they can be used
-# outside of $CHROMIUM_ROOT.  Used for gn and clang-format
-add_to_path_pre $CHROMIUM_SRC/buildtools/$chromium_buildtools_platform
 add_to_path_post $CHROMIUM_SRC/third_party/llvm-build/Release+Asserts/bin
 
 # TODO: Add openscreen buildtools to $PATH if they are not found in $CHROMIUM_SRC
@@ -112,6 +111,9 @@ if [ -d $HOME/.pyenv ]; then
 fi
 
 source_if_readable $HOME/gob/dotfiles/.environment
+
+# Rust installed packages.
+add_to_path_pre $HOME/.cargo/bin
 
 [ -n "$mypath_pre" ] && export PATH="$mypath_pre:$PATH"
 [ -n "$mypath_post" ] && export PATH="$PATH:$mypath_post"

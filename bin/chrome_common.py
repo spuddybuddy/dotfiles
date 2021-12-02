@@ -2,7 +2,7 @@ import os
 import datetime
 
 # Features to enable.
-CHROME_FEATURES = ["CastMediaRouteProvider", "GlobalMediaControlsForCast"]
+CHROME_FEATURES = ["GlobalMediaControlsCastStartStop"]
 
 
 # path: Path to the Chrome binary.
