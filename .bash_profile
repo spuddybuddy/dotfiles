@@ -25,6 +25,7 @@ function create_local() {
 # Create some directories we expect to live on local disk.  We do this here
 # because some programs expect them to exist, and misbehave if they do not.
 create_local tmp
+create_local tmp/emacs
 create_local logs
 
 source_if_readable $HOME/github/spuddybuddy/dotfiles/bash_logging.sh

@@ -89,4 +89,11 @@
            ;; have generic Google elisp.
            (require 'google))))
 
+;;;;;;;;;;;;;;;;;;;;;; put backups in a better place.
+;; We do this after loading Google elisp since it also modifies backup-directory-alist.
+
+(defvar mf-emacs-backup-path (concat mf-home-dir "/tmp/emacs"))
+(if (file-readable-p mf-emacs-backup-path)
+    (add-to-list 'backup-directory-alist '("." . mf-emacs-backup-path)))
+
 (provide 'mf-emacs)
