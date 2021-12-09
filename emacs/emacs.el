@@ -94,6 +94,6 @@
 
 (defvar mf-emacs-backup-path (concat mf-home-dir "/tmp/emacs"))
 (if (file-readable-p mf-emacs-backup-path)
-    (add-to-list 'backup-directory-alist '("." . mf-emacs-backup-path)))
+    (add-to-list 'backup-directory-alist `("." . ,mf-emacs-backup-path)))
 
 (provide 'mf-emacs)
