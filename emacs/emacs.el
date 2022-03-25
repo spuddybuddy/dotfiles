@@ -10,7 +10,6 @@
 ;; js2-mode - https://github.com/mooz/js2-mode
 
 ;;;;;;;;;;;;;;;;;;;;;; generic mode
-;; TODO: What is this?  Is it still required?
 (require 'generic-x)
 
 ;;;;;;;;;;;;;;;;;;;;;; global key remappings
@@ -63,7 +62,6 @@
 (require 'package)
 (add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-(package-initialize)
 
 ;; GN-mode
 ;; TODO: Mirror this so it's available everywhere.

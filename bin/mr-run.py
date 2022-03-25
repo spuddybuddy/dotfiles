@@ -9,7 +9,7 @@ import chrome_common
 
 VMODULE_PATTERNS = [
     "?resentation*",
-    "cast_*"
+    "cast_*",
     "media_r*",
     "offscreen_tab*",
     "dial*",
