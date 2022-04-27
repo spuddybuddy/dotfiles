@@ -1,0 +1,14 @@
+# Scan codes are specified as:
+#   KEYBOARD_KEY_<hex scan code>=<key code identifier>
+# The scan code should be expressed in hex lowercase. The key codes
+# are retrieved and normalized from the kernel input API header.
+# Keycodes are either KEY_* defines in lowercase with the key_ prefix
+# optionally removed or BTN_ defines in lowercase with btn_ preserved.
+
+# Remap the "End" key on the Kinesis2 to KEY_LEFTALT.  "End" is hardware
+# remapped in Kinesis to the Command key on Mac, which Emacs interprets as the
+# Super- modifier.  This remapping causes Emacs to treat it as Meta, as
+# intended.
+
+evdev:name:Kinesis Advantage2 Keyboard:*
+ KEYBOARD_KEY_700e7=leftalt
