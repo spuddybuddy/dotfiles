@@ -115,6 +115,9 @@ source_if_readable $HOME/gob/dotfiles/.environment
 # Rust installed packages.
 add_to_path_pre $HOME/.cargo/bin
 
+# Go installed commands.
+add_to_path_pre $HOME/go/bin
+
 [ -n "$mypath_pre" ] && export PATH="$mypath_pre:$PATH"
 [ -n "$mypath_post" ] && export PATH="$PATH:$mypath_post"
 

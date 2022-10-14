@@ -2,7 +2,7 @@ import os
 import datetime
 
 # Features to enable.
-CHROME_FEATURES = ["GlobalMediaControlsCastStartStop"]
+CHROME_FEATURES = ["GlobalMediaControlsCastStartStop","OpenscreenCastStreamingSession"]
 
 
 # path: Path to the Chrome binary.
