@@ -2,20 +2,25 @@ import os
 import datetime
 
 # Features to enable.
-CHROME_FEATURES = ["GlobalMediaControlsCastStartStop","OpenscreenCastStreamingSession"]
+CHROME_ENABLED_FEATURES = ["GlobalMediaControlsCastStartStop","OpenscreenCastStreamingSession"]
+
+# Features to disable.
+CHROME_DISABLED_FEATURES = []
 
 
 # path: Path to the Chrome binary.
 # logname: Tag to identify the logfile.
-# features: List of features to enable.
+# enabled_features: List of features to enable.
+# disabled_features: List of features to disable.
 # user_dir: Path to user directory.
 # args: List of arguments.
 # extra_args: More arguments.
-def RunChrome(path, logname, features, user_dir, args, extra_args = []):
+def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args, extra_args = []):
   # The first element of the argument list is the name of the program being run,
   # not an actual commandline argument.
   execv_args = [path] + args + [
-      "--enable-features=" + ",".join(features),
+      "--enable-features=" + ",".join(enabled_features),
+      "--disable-features=" + ",".join(disabled_features),
       "--user-data-dir=" + user_dir,
       ] + extra_args
 

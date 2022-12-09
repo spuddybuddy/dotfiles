@@ -26,7 +26,8 @@ def RunChromeChannel(channel, extra_args):
   home = os.getenv("HOME")
   chrome_common.RunChrome(os.path.join(CHROME_PATHS[channel], "chrome"),
             channel,
-            chrome_common.CHROME_FEATURES,
+            chrome_common.CHROME_ENABLED_FEATURES,
+            chrome_common.CHROME_DISABLED_FEATURES,
             os.path.join(home, CHROME_USER_DIRS[channel]),
             [
                 "--enable-logging",

@@ -30,7 +30,8 @@ def RunChromeBuild(path, chrome_folder, user_dir, vmodule, prefix_args, extra_ar
     chrome_common.RunChrome(
         os.path.join(chrome_folder, "chrome"),
         'local',
-        chrome_common.CHROME_FEATURES,
+        chrome_common.CHROME_ENABLED_FEATURES,
+        chrome_common.CHROME_DISABLED_FEATURES,
         user_dir,
         args,
         extra_args)
