@@ -1,0 +1,12 @@
+# Work account
+Host github.com-mfoltzgoogle
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_github_mfoltzgoogle
+
+# Personal account
+Host github.com-spuddybuddy
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_github_spuddybuddy
+
