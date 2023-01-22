@@ -1,12 +1,13 @@
 # Work account
+# Repo URLs are: git@github.com-mfoltzgoogle:<user>/<repo>
 Host github.com-mfoltzgoogle
   HostName github.com
   User git
   IdentityFile ~/.ssh/id_github_mfoltzgoogle
 
 # Personal account
+# Repo URLs are: git@github.com-spuddybuddy:<user>/<repo>
 Host github.com-spuddybuddy
   HostName github.com
   User git
   IdentityFile ~/.ssh/id_github_spuddybuddy
-
