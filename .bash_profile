@@ -38,6 +38,23 @@ ulimit -c unlimited
 # Set umask appropriately.
 umask 022
 
+# Start ssh agent if not already started.
+if [ -z "${SSH_AUTH_SOCKET}" ]; then
+  eval "$(ssh-agent -s)"
+fi
+
+# Add GitHub keys.
+function add_ssh_key() {
+  local private_key=$1
+  if [ -r ${private_key} ]; then
+    mf_log " Adding ${private_key} to ssh-agent"
+    ssh-add ${private_key}
+  fi
+}
+
+add_ssh_key $HOME/.ssh/id_github_mfoltzgoogle
+add_ssh_key $HOME/.ssh/id_github_spuddybuddy
+
+# Source remaining files.
 source_if_readable $HOME/gob/dotfiles/.bash_profile
 source_if_readable $HOME/.bashrc
-source_if_readable $HOME/gob/dotfiles/goma.sh
