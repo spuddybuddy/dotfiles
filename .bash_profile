@@ -47,7 +47,7 @@ fi
 function add_ssh_key() {
   local private_key=$1
   if [ -r ${private_key} ]; then
-    mf_log " Adding ${private_key} to ssh-agent"
+    mf_log "Adding ${private_key} to ssh-agent"
     ssh-add ${private_key}
   fi
 }

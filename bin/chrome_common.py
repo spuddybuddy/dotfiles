@@ -15,7 +15,9 @@ CHROME_DISABLED_FEATURES = []
 # user_dir: Path to user directory.
 # args: List of arguments.
 # extra_args: More arguments.
-def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args, extra_args = []):
+# env: Dict of environment variables to set on the process.
+def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args,
+              extra_args = [], env = None):
   # The first element of the argument list is the name of the program being run,
   # not an actual commandline argument.
   execv_args = [path] + args + [
@@ -38,4 +40,7 @@ def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args
   os.dup2(logfile_fd, 1)  # 1=STDOUT
   os.dup2(logfile_fd, 2)  # 2=STDERR
   os.write(logfile_fd, bytes(" ".join(execv_args) + "\n", "utf-8"))
-  os.execv(path, execv_args)
+  chrome_env = os.environ
+  if env:
+    chrome_env.update(env)
+  os.execve(path, execv_args, chrome_env)
