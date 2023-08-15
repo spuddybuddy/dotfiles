@@ -79,11 +79,12 @@ function add_to_path_post() {
 add_to_path_post $HOME/github/spuddybuddy/dotfiles/bin
 
 # Sometimes, depot_tools is checked out into $HOME.
-add_to_path_post $HOME/depot_tools
+# 
+# Ensure it's added before system paths, as some depot_tools binaries shadow
+# system-installed ones.
+add_to_path_pre $HOME/depot_tools
 
 add_to_path_post $CHROMIUM_SRC/third_party/llvm-build/Release+Asserts/bin
-
-# TODO: Add openscreen buildtools to $PATH if they are not found in $CHROMIUM_SRC
 
 # Android tools
 add_to_path_post $HOME/android/platform-tools
