@@ -58,8 +58,10 @@ function add_ssh_key() {
 add_ssh_key $HOME/.ssh/id_github_mfoltzgoogle
 add_ssh_key $HOME/.ssh/id_github_spuddybuddy
 
-# Try to debug SSH agent issues.
+# To debug SSH agent issues.
 mf_log "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+mf_log "FWD_SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+mf_log "SSH_AGENT_PID=$SSH_AGENT_PID"
 mf_log "ssh-agent=$(ps auxwww | fgrep ssh-agent)"
 
 echo "ssh-agent identities:"
