@@ -38,9 +38,12 @@ ulimit -c unlimited
 # Set umask appropriately.
 umask 022
 
+# Needs to be before any ssh-agent related stuff.
+source_if_readable $HOME/gob/dotfiles/.bash_profile
+
 # Start ssh agent if not already started.
-if [ -z "${SSH_AUTH_SOCKET}" ]; then
-  eval "$(ssh-agent -s)"
+if [ -z "$SSH_AUTH_SOCK" ]; then
+  eval $(ssh-agent -s)
 fi
 
 # Add GitHub keys.
@@ -55,6 +58,12 @@ function add_ssh_key() {
 add_ssh_key $HOME/.ssh/id_github_mfoltzgoogle
 add_ssh_key $HOME/.ssh/id_github_spuddybuddy
 
+# Try to debug SSH agent issues.
+mf_log "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+mf_log "ssh-agent=$(ps auxwww | fgrep ssh-agent)"
+
+echo "ssh-agent identities:"
+ssh-add -l
+
 # Source remaining files.
-source_if_readable $HOME/gob/dotfiles/.bash_profile
 source_if_readable $HOME/.bashrc
