@@ -1,0 +1,16 @@
+use_remoteexec = true            # Googlers: Use build farm, compiles faster.
+is_component_build = true  # Links faster.
+is_debug = false           # Release build, runs faster.
+dcheck_always_on = true    # Enables DCHECK despite release build.
+enable_nacl = false        # Skips native client build, compiles faster.
+proprietary_codecs = true
+blink_symbol_level=0
+enable_hangout_services_extension = false
+enable_remoting = false
+ffmpeg_branding = "Chrome"
+is_component_build = true
+
+# Builds Chrome instead of Chromium. This requires a src-internal
+# checkout. Adds internal features and branded art assets.
+is_chrome_branded = true
+target_os = "chromeos"
