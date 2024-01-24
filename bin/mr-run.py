@@ -26,7 +26,7 @@ def MakeXDGRuntimeTmpdir():
 
 
 def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args, extra_args):
-    vmodule_arg = ",".join([pattern + "=2" for pattern in VMODULE_PATTERNS + vmodule])
+    vmodule_arg = ",".join([pattern + "=3" for pattern in VMODULE_PATTERNS + vmodule])
     args = prefix_args + [
         "--enable-logging",
         "--also-log-to-stderr",
@@ -38,8 +38,10 @@ def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args,
         "--force-enable-metrics-reporting",
         "--force-msbb-setting-on-for-ukm",
         "--metrics-upload-interval=5",
+        "--cast-log-device-cert-chain",
     ]
     enabled_features = chrome_common.CHROME_ENABLED_FEATURES
+    enabled_features += [ "CastFallbackCRLRevocation" ]
     chrome_env = None
     if lacros_folder:
         MakeXDGRuntimeTmpdir()
