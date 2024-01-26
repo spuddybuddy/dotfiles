@@ -94,6 +94,10 @@ add_to_path_post $HOME/android/platform-tools
 # https://cloud.google.com/appengine/downloads
 add_to_path_post $HOME/google_appengine
 
+# Google Cloud SDK CLI
+# https://cloud.google.com/sdk/docs/install-sdk
+add_to_path_post $HOME/google-cloud-sdk/bin
+
 # gsutil
 # https://cloud.google.com/storage/docs/gsutil_install
 add_to_path_post $HOME/gsutil
@@ -101,9 +105,10 @@ add_to_path_post $HOME/gsutil
 # Scripts installed by pip (Python).  Mostly for bikeshed
 add_to_path_post $HOME/.local/bin
 
-# Locally built binaries on OS X
+# Homebrew and locally built binaries on MacOS
 if [ $OS == 'Darwin' ]; then
-    add_to_path_post /opt/local/bin
+  add_to_path_post /opt/homebrew/bin
+  add_to_path_post /opt/local/bin
 fi
 
 # pyenv: https://github.com/pyenv/pyenv

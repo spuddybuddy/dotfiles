@@ -35,6 +35,9 @@ mf_log "Executing $HOME/.bash_profile"
 # Take a big dump.
 ulimit -c unlimited
 
+# Set a high per-terminal file limit.  This may be capped on some systems.
+ulimit -n 200000
+
 # Set umask appropriately.
 umask 022
 
