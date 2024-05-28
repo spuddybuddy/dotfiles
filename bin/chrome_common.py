@@ -2,11 +2,10 @@ import os
 import datetime
 
 # Features to enable.
-CHROME_ENABLED_FEATURES = ["GlobalMediaControlsCastStartStop","OpenscreenCastStreamingSession"]
+CHROME_ENABLED_FEATURES = ["CameraMicPreview","OneTimePermission","GetUserMediaDeferredDeviceSettingsSelection"]
 
 # Features to disable.
 CHROME_DISABLED_FEATURES = []
-
 
 # path: Path to the Chrome binary.
 # logname: Tag to identify the logfile.

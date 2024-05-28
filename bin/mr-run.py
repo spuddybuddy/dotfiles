@@ -14,6 +14,7 @@ VMODULE_PATTERNS = [
     "offscreen_tab*",
     "dial*",
     "cast_cert*",
+    "media_preview*",
 ]
 
 _XDG_RUNTIME_TMPDIR = "/tmp/ash_chrome_xdg_runtime"
