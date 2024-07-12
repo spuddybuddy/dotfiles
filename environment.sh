@@ -135,15 +135,6 @@ if [ $? -eq 0 ]; then
     eval "$(pyenv init -)"
 fi
 
-# Set a custom keyboard layout if I am using my Kinesis Advantage2.
-# Does not work though :-(
-# See: https://lars.ingebrigtsen.no/2024/04/28/the-simplest-thing-in-the-world-modifing-keymaps-in-wayland/
-#custom_layout="$HOME/.config/xkb/symbols/us-mfoltz"
-#if [ -f "$custom_layout" && $(lsusb | fgrep -q "Kinesis Corporation Advantage2") ]; then
-#  mf_log "Installing xkb layout $custom_layout"
-# export XKB_DEFAULT_LAYOUT="us-mfoltz"
-#fi
-
 # kilroy was here - don't run more than once.
 export MFOLTZ_ENVIRONMENT_WAS_SOURCED="true"
 
