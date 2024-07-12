@@ -1,9 +1,0 @@
-partial alphanumeric_keys modifier_keys
-xkb_symbols "mfoltz" {
-  name[Group1]= "mfoltz (US)"
-  include "us(basic)"
-  key <Super_R> { [ Alt_L ] };
-  modifier_map Mod1 { <Super_R> };
-};
-
-  
