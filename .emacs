@@ -143,5 +143,9 @@
     (set-face-attribute 'default nil :foundry "Outline" :family "Consolas")
     (set-frame-font "Consolas-11.5" nil t)))
 
+;; Map the super key to meta as that is the keycode passed by Wayland on gLinux
+;; on my personal Kinesis keyboard.
+(setq x-super-keysym 'meta)
+
 ;; Always start the server.
 (server-start)
