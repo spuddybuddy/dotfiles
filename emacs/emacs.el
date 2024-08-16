@@ -9,6 +9,31 @@
 ;; ssh.el - https://github.com/ieure/ssh-el
 ;; js2-mode - https://github.com/mooz/js2-mode
 
+;;;;;;;;;;;;;;;;;;;;; Platform-specific font setup
+;; These variables are used in .emacs and in frame setup hooks.
+
+(setq mf-font-font "Bitstream Vera Sans Mono-13")
+(setq mf-font-family "Bitstream Vera Sans Mono")
+(setq mf-font-foundry "Bits")
+(setq mf-font-height 130)
+
+(cond ((eq system-type 'windows-nt)
+       (setq mf-font-font "Consolas-11.5")
+       (setq mf-font-family "Consolas")
+       (setq mf-font-foundry "Outline"))
+      ((eq system-type 'darwin)
+       (setq mf-font-font "Monaco-15")
+       (setq mf-font-family "Monaco")
+       (setq mf-font-foundry "apple")
+       (setq mf-font-height 150)))
+
+(defun mf-set-frame-face (frame)
+  "Configure fonts on frame creation"
+  (select-frame frame)
+  (if (display-graphic-p)
+      (set-frame-font mf-font-font nil nil t)))
+(add-hook 'after-make-frame-functions 'mf-set-frame-face)
+
 ;;;;;;;;;;;;;;;;;;;;;; generic mode
 (require 'generic-x)
 
