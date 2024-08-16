@@ -143,5 +143,8 @@
     (set-face-attribute 'default nil :foundry "Outline" :family "Consolas")
     (set-frame-font "Consolas-11.5" nil t)))
 
+(when (eq system-type 'darwin)
+  (set-face-attribute 'default nil :foundry "apple" :family "Monaco" :height 150))
+
 ;; Always start the server.
 (server-start)
