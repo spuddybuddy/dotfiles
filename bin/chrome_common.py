@@ -2,7 +2,7 @@ import os
 import datetime
 
 # Features to enable.
-CHROME_ENABLED_FEATURES = ["CameraMicPreview","OneTimePermission","GetUserMediaDeferredDeviceSettingsSelection"]
+CHROME_ENABLED_FEATURES = ["CameraMicPreview","GetUserMediaDeferredDeviceSettingsSelection"]
 
 # Features to disable.
 CHROME_DISABLED_FEATURES = []

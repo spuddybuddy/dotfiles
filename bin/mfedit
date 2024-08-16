@@ -8,4 +8,4 @@
 emacsclient="/usr/bin/emacsclient"
 emacs_osx="/Applications/Emacs.app/Contents/MacOS/bin/";
 [ -x "$emacs_osx/emacsclient" ] && emacsclient="$emacs_osx/emacsclient";
-exec $emacsclient "--create-frame --alternate-editor=" $*
+exec $emacsclient --create-frame --alternate-editor= $*

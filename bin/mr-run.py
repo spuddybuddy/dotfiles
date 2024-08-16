@@ -27,7 +27,7 @@ def MakeXDGRuntimeTmpdir():
 
 
 def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args, extra_args):
-    vmodule_arg = ",".join([pattern + "=3" for pattern in VMODULE_PATTERNS + vmodule])
+    vmodule_arg = ",".join([pattern + "=1" for pattern in VMODULE_PATTERNS + vmodule])
     args = prefix_args + [
         "--enable-logging",
         "--also-log-to-stderr",
