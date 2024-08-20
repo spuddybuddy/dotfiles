@@ -29,8 +29,7 @@ def MakeXDGRuntimeTmpdir():
 def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args, extra_args):
     vmodule_arg = ",".join([pattern + "=1" for pattern in VMODULE_PATTERNS + vmodule])
     args = prefix_args + [
-        "--enable-logging",
-        "--also-log-to-stderr",
+        "--enable-logging=stderr",
         "--vmodule=" + vmodule_arg,
         "--no-proxy-server",
         "--unsafely-treat-insecure-origin-as-secure=http://web-platform.test:8001",
@@ -39,6 +38,7 @@ def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args,
         "--force-enable-metrics-reporting",
         "--force-msbb-setting-on-for-ukm",
         "--metrics-upload-interval=5",
+        "--use-fake-device-for-media-stream",
         "--cast-log-device-cert-chain",
     ]
     enabled_features = chrome_common.CHROME_ENABLED_FEATURES
