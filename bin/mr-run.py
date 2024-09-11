@@ -15,6 +15,10 @@ VMODULE_PATTERNS = [
     "dial*",
     "cast_cert*",
     "media_preview*",
+    "video_effects*",
+    "mirroring*",
+    "pulse_*",
+    "audio_manager_pulse*",
 ]
 
 _XDG_RUNTIME_TMPDIR = "/tmp/ash_chrome_xdg_runtime"
