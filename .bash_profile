@@ -58,7 +58,7 @@ function add_ssh_key() {
   fi
 }
 
-add_ssh_key $HOME/.ssh/id_github_mfoltzgoogle
+add_ssh_key $HOME/.ssh/id_github_markafoltz
 add_ssh_key $HOME/.ssh/id_github_spuddybuddy
 
 # To debug SSH agent issues.
