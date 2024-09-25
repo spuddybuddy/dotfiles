@@ -117,6 +117,12 @@ if [ -d $HOME/.pyenv ]; then
     add_to_path_pre "$PYENV_ROOT/bin"
 fi
 
+# Ruby Gems
+if [ -d $HOME/gems ]; then
+  export GEM_HOME="$HOME/gems"
+  add_to_path_post $GEM_HOME/bin
+fi
+
 source_if_readable $HOME/gob/dotfiles/.environment
 
 # Rust installed packages.
