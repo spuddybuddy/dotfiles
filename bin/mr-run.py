@@ -46,7 +46,7 @@ def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args,
         "--cast-log-device-cert-chain",
     ]
     enabled_features = chrome_common.CHROME_ENABLED_FEATURES
-    enabled_features += [ "CastFallbackCRLRevocation" ]
+    enabled_features += [ "CastFallbackCRLRevocation", "CastMessageLogging" ]
     chrome_env = None
     if lacros_folder:
         MakeXDGRuntimeTmpdir()
