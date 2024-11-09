@@ -17,16 +17,28 @@ VMODULE_PATTERNS = [
     "media_preview*",
 ]
 
-_XDG_RUNTIME_TMPDIR = "/tmp/ash_chrome_xdg_runtime"
+def FindChromeBinary(chrome_folder):
+    chrome_path = None
+    if sys.platform == "win32":
+        chrome_path = os.path.join(chrome_folder, "chrome.exe")
+    elif sys.platform == "darwin":
+        if os.path.exists(os.path.join(chrome_folder, "Chromium.app")):
+            chrome_path = os.path.join(
+                chrome_folder,
+                "Chromium.app", "Contents", "MacOS", "Chromium")
+        else:
+            chrome_path = os.path.join(
+                chrome_folder,
+                "Google Chrome.app", "Contents", "MacOS", "Google Chrome")
+    else:
+        chrome_path = os.path.join(chrome_folder, "chrome")
+    if os.path.exists(chrome_path):
+        return chrome_path
+    else:
+        raise RuntimeError("Where you at Chrome!?!? Looked for " + chrome_path)
 
-def MakeXDGRuntimeTmpdir():
-    if os.access(_XDG_RUNTIME_TMPDIR, os.W_OK):
-        shutil.rmtree(_XDG_RUNTIME_TMPDIR)
-    os.mkdir(_XDG_RUNTIME_TMPDIR)
-    print ("Making %s..." % _XDG_RUNTIME_TMPDIR)
-
-
-def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args, extra_args):
+    
+def RunChromeBuild(chrome_folder, user_dir, vmodule, prefix_args, extra_args):
     vmodule_arg = ",".join([pattern + "=1" for pattern in VMODULE_PATTERNS + vmodule])
     args = prefix_args + [
         "--enable-logging=stderr",
@@ -35,32 +47,15 @@ def RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args,
         "--unsafely-treat-insecure-origin-as-secure=http://web-platform.test:8001",
         "--enable-experimental-web-platform-features",
         "--disable-gesture-requirement-for-presentation",
-        "--force-enable-metrics-reporting",
-        "--force-msbb-setting-on-for-ukm",
         "--metrics-upload-interval=5",
-        "--use-fake-device-for-media-stream",
         "--cast-log-device-cert-chain",
     ]
     enabled_features = chrome_common.CHROME_ENABLED_FEATURES
-    enabled_features += [ "CastFallbackCRLRevocation" ]
+    enabled_features += [ "CastFallbackCRLRevocation", "CameraMicEffects" ]
     chrome_env = None
-    if lacros_folder:
-        MakeXDGRuntimeTmpdir()
-        args += [
-            "--enable-wayland-server",
-            "--no-startup-window",
-            "--login-manager",
-            "--login-profile=user",
-            "--lacros-chrome-path=" + lacros_folder,
-        ]
-        enabled_features += [
-            "LacrosSupport",
-            "LacrosPrimary",
-            "LacrosOnly",
-        ]
-        chrome_env = {'XDG_RUNTIME_DIR': _XDG_RUNTIME_TMPDIR}
+    chrome_path = FindChromeBinary(chrome_folder)
     chrome_common.RunChrome(
-        os.path.join(chrome_folder, "chrome"),
+        chrome_path,
         'local',
         enabled_features,
         chrome_common.CHROME_DISABLED_FEATURES,
@@ -118,7 +113,7 @@ def main(argv):
         if run_gdb:
             prefix_args += ["--args", chrome_folder]
             path = "/usr/bin/gdb"
-        RunChromeBuild(chrome_folder, lacros_folder, user_dir, vmodule, prefix_args, extra_args)
+        RunChromeBuild(chrome_folder, user_dir, vmodule, prefix_args, extra_args)
     except getopt.GetoptError as e:
         print ("Arguments error: ", e.msg, " ", e.opt)
         PrintUsage()

@@ -30,12 +30,12 @@ def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args
   # easier, but it spawns Chrome as a child process and there's no need to keep
   # this Python process around.
   home = os.getenv("HOME")
-  logfile_name = os.path.join(home,
-                              "logs",
+  logfile_path = os.path.join(home, "logs")
+  logfile_name = os.path.join(logfile_path,
                               "google-chrome-" + logname + "-" +
                               datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".log")
-  os.mknod(logfile_name)
-  logfile_fd = os.open(logfile_name, os.O_WRONLY)
+  os.makedirs(logfile_path, exist_ok=True)
+  logfile_fd = os.open(logfile_name, os.O_WRONLY | os.O_CREAT)
   os.dup2(logfile_fd, 1)  # 1=STDOUT
   os.dup2(logfile_fd, 2)  # 2=STDERR
   os.write(logfile_fd, bytes(" ".join(execv_args) + "\n", "utf-8"))
