@@ -15,6 +15,10 @@ VMODULE_PATTERNS = [
     "dial*",
     "cast_cert*",
     "media_preview*",
+    "video_effects*",
+    "mirroring*",
+    "pulse_*",
+    "audio_manager_pulse*",
 ]
 
 def FindChromeBinary(chrome_folder):
@@ -51,7 +55,7 @@ def RunChromeBuild(chrome_folder, user_dir, vmodule, prefix_args, extra_args):
         "--cast-log-device-cert-chain",
     ]
     enabled_features = chrome_common.CHROME_ENABLED_FEATURES
-    enabled_features += [ "CastFallbackCRLRevocation", "CameraMicEffects" ]
+    enabled_features += [ "CastFallbackCRLRevocation", "CameraMicEffects", "CastMessageLogging" ]
     chrome_env = None
     chrome_path = FindChromeBinary(chrome_folder)
     chrome_common.RunChrome(
