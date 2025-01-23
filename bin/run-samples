@@ -1,0 +1,10 @@
+#!/bin/bash
+# -*- Mode: Shell-script; -*-
+# Runs the GoogleChrome samples code.
+# Prerequisites: https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/testing-your-github-pages-site-locally-with-jekyll
+
+if [ $(basename $PWD) != "samples" ]; then
+  echo "Must run from the samples/ directory.";
+  exit 1;
+fi
+exec bundle exec jekyll serve
