@@ -1,0 +1,23 @@
+[http]
+	cookiefile = ~/.gitcookies
+[pull]
+	rebase = true
+[user]
+	name = mark a. foltz
+	email = mfoltz@chromium.org
+
+[google]
+	uplink = true
+
+[color]
+	ui = auto
+
+[includeIf "gitdir:~/github/"]
+        path = spuddybuddy/dotfiles/gitconfig-google
+
+[includeIf "hasconfig:remote.*.url:sso:**"]
+        path = spuddybuddy/dotfiles/gitconfig-google
+
+[includeIf "gitdir:~/github/spuddybuddy/"]
+        path = spuddybuddy/dotfiles/gitconfig-spuddybuddy
+        
