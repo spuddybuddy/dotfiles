@@ -1,0 +1,11 @@
+[http]
+	cookiefile = ~/.gitcookies
+[pull]
+	rebase = true
+[user]
+	name = mark a. foltz
+	email = mfoltz@chromium.org
+[google]
+	uplink = true
+[color]
+	ui = auto
