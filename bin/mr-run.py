@@ -7,6 +7,16 @@ import sys
 
 import chrome_common
 
+# Features to enable.
+CHROME_ENABLED_FEATURES = [
+    "CameraMicPreview",
+    "GetUserMediaDeferredDeviceSettingsSelection",
+    "CameraMicEffects",
+    "CastMessageLogging",
+]
+
+CHROME_DISABLED_FEATURES = []
+
 VMODULE_PATTERNS = [
     "?resentation*",
     "cast_*",
@@ -21,27 +31,6 @@ VMODULE_PATTERNS = [
     "audio_manager_pulse*",
 ]
 
-def FindChromeBinary(chrome_folder):
-    chrome_path = None
-    if sys.platform == "win32":
-        chrome_path = os.path.join(chrome_folder, "chrome.exe")
-    elif sys.platform == "darwin":
-        if os.path.exists(os.path.join(chrome_folder, "Chromium.app")):
-            chrome_path = os.path.join(
-                chrome_folder,
-                "Chromium.app", "Contents", "MacOS", "Chromium")
-        else:
-            chrome_path = os.path.join(
-                chrome_folder,
-                "Google Chrome.app", "Contents", "MacOS", "Google Chrome")
-    else:
-        chrome_path = os.path.join(chrome_folder, "chrome")
-    if os.path.exists(chrome_path):
-        return chrome_path
-    else:
-        raise RuntimeError("Where you at Chrome!?!? Looked for " + chrome_path)
-
-    
 def RunChromeBuild(chrome_folder, user_dir, vmodule, prefix_args, extra_args):
     vmodule_arg = ",".join([pattern + "=1" for pattern in VMODULE_PATTERNS + vmodule])
     args = prefix_args + [
@@ -54,15 +43,14 @@ def RunChromeBuild(chrome_folder, user_dir, vmodule, prefix_args, extra_args):
         "--metrics-upload-interval=5",
         "--cast-log-device-cert-chain",
     ]
-    enabled_features = chrome_common.CHROME_ENABLED_FEATURES
-    enabled_features += [ "CastFallbackCRLRevocation", "CameraMicEffects", "CastMessageLogging" ]
+    enabled_features = CHROME_ENABLED_FEATURES
     chrome_env = None
-    chrome_path = FindChromeBinary(chrome_folder)
+    chrome_path = chrome_common.FindChromeBinary(chrome_folder)
     chrome_common.RunChrome(
         chrome_path,
         'local',
-        enabled_features,
-        chrome_common.CHROME_DISABLED_FEATURES,
+        CHROME_ENABLED_FEATURES,
+        CHROME_DISABLED_FEATURES,
         user_dir,
         args,
         extra_args,

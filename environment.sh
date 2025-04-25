@@ -117,6 +117,9 @@ if [ -d $HOME/.pyenv ]; then
     add_to_path_pre "$PYENV_ROOT/bin"
 fi
 
+# pipx
+add_to_path_post "$HOME/.local.bin"
+
 # Ruby Gems
 if [ -d $HOME/gems ]; then
   export GEM_HOME="$HOME/gems"

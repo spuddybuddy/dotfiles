@@ -1,15 +1,28 @@
 import os
 import datetime
+import sys
 
-# Features to enable.
-CHROME_ENABLED_FEATURES = [
-    "CameraMicPreview",
-    "GetUserMediaDeferredDeviceSettingsSelection",
-    ]
+def FindChromeBinary(chrome_folder):
+    chrome_path = None
+    if sys.platform == "win32":
+        chrome_path = os.path.join(chrome_folder, "chrome.exe")
+    elif sys.platform == "darwin":
+        if os.path.exists(os.path.join(chrome_folder, "Chromium.app")):
+            chrome_path = os.path.join(
+                chrome_folder,
+                "Chromium.app", "Contents", "MacOS", "Chromium")
+        else:
+            chrome_path = os.path.join(
+                chrome_folder,
+                "Google Chrome.app", "Contents", "MacOS", "Google Chrome")
+    else:
+        chrome_path = os.path.join(chrome_folder, "chrome")
+    if os.path.exists(chrome_path):
+        return chrome_path
+    else:
+        raise RuntimeError("Where you at Chrome!?!? Looked for " + chrome_path)
 
-# Features to disable.
-CHROME_DISABLED_FEATURES = []
-
+    
 # path: Path to the Chrome binary.
 # logname: Tag to identify the logfile.
 # enabled_features: List of features to enable.
@@ -27,6 +40,8 @@ def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args
       "--disable-features=" + ",".join(disabled_features),
       "--user-data-dir=" + user_dir,
       ] + extra_args
+
+  print(" ".join(execv_args))
 
   # I go low-level here with the os module since I couldn't find another way to
   # redirect stdout/stderr and then exec Chrome.  subprocess.run makes this much
