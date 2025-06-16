@@ -1,0 +1,14 @@
+#!/bin/bash
+# -*- Mode: Shell-script; -*-
+#
+# This is a small wrapper to run emacsclient.
+# --create-frame tells emacs to open a new frame.
+# -a launches emacs in daemon mode if it isn't already running.
+
+emacsclient="emacsclient"
+alternate_editor=""
+if [ "$OS" == 'Darwin' ]; then
+  emacsclient="/Applications/Emacs.app/Contents/MacOS/bin/emacsclient";
+  alternate_editor="/Applications/Emacs.app/Contents/MacOS/Emacs"
+fi
+ALTERNATE_EDITOR="$alternate_editor" exec $emacsclient --create-frame $* &

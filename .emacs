@@ -138,6 +138,6 @@
 (put 'upcase-region 'disabled nil)
 (put 'erase-buffer 'disabled nil)
 
-
-;; Always start the server.
-(server-start)
+;; Always start the server, if not already started.
+(require 'server)
+(unless (server-running-p) (server-start))

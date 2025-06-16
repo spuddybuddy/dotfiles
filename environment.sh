@@ -27,18 +27,12 @@ export TZ="America/Los_Angeles"
 # Figure out what OS we are on
 export OS="$(uname)"
 
-########### Emacs
-
-export EDITOR="$HOME/bin/mfedit"
-export VISUAL="$HOME/bin/mfedit"
-
 ########### Chromium
 
 export CHROMIUM_ROOT="$HOME/chrome"
 export OPENSCREEN_ROOT="$HOME/openscreen"
 export CHROMIUM_SRC="$CHROMIUM_ROOT/src"
 export LLVM_SYMBOLIZER_PATH="third_party/llvm-build/Release+Asserts/bin/llvm-symbolizer"
-export DOGFOOD_STACKED_CHANGES=1
 unset CC CXX
 
 # Figure out what flavor of Chromium buildtools to use
@@ -75,6 +69,11 @@ function add_to_path_post() {
     fi
   fi
 }
+
+########### Emacs
+
+export EDITOR=mfemacs
+export VISUAL=mfemacs
 
 # Personal scripts
 add_to_path_post $HOME/github/spuddybuddy/dotfiles/bin
