@@ -2,7 +2,7 @@ import os
 import datetime
 import sys
 
-def FindChromeBinary(chrome_folder):
+def FindChromeBinary(chrome_folder, channel=None):
     chrome_path = None
     if sys.platform == "win32":
         chrome_path = os.path.join(chrome_folder, "chrome.exe")
@@ -12,9 +12,12 @@ def FindChromeBinary(chrome_folder):
                 chrome_folder,
                 "Chromium.app", "Contents", "MacOS", "Chromium")
         else:
+            app_name = "Google Chrome"
+            if channel:
+                app_name += " " + channel
             chrome_path = os.path.join(
                 chrome_folder,
-                "Google Chrome.app", "Contents", "MacOS", "Google Chrome")
+                app_name + ".app", "Contents", "MacOS", app_name)
     else:
         chrome_path = os.path.join(chrome_folder, "chrome")
     if os.path.exists(chrome_path):
@@ -27,19 +30,22 @@ def FindChromeBinary(chrome_folder):
 # logname: Tag to identify the logfile.
 # enabled_features: List of features to enable.
 # disabled_features: List of features to disable.
-# user_dir: Path to user directory.
+# user_dir (optional): Path to user directory.
 # args: List of arguments.
 # extra_args: More arguments.
 # env: Dict of environment variables to set on the process.
+# TODO: Move user_dir to end with other optional arguments.
 def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args,
               extra_args = [], env = None):
   # The first element of the argument list is the name of the program being run,
   # not an actual commandline argument.
   execv_args = [path] + args + [
       "--enable-features=" + ",".join(enabled_features),
-      "--disable-features=" + ",".join(disabled_features),
-      "--user-data-dir=" + user_dir,
-      ] + extra_args
+      "--disable-features=" + ",".join(disabled_features)
+  ]
+  if user_dir:
+      execv_args.append("--user-data-dir=" + user_dir)
+  execv_args += extra_args
 
   print(" ".join(execv_args))
 
