@@ -39,10 +39,11 @@ def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args
               extra_args = [], env = None):
   # The first element of the argument list is the name of the program being run,
   # not an actual commandline argument.
-  execv_args = [path] + args + [
-      "--enable-features=" + ",".join(enabled_features),
-      "--disable-features=" + ",".join(disabled_features)
-  ]
+  execv_args = [path] + args
+  if enabled_features:
+      execv_args.append("--enable-features=" + ",".join(enabled_features))
+  if disabled_features:
+      execv_args.append("--disable-features=" + ",".join(disabled_features))
   if user_dir:
       execv_args.append("--user-data-dir=" + user_dir)
   execv_args += extra_args
