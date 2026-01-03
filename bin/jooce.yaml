@@ -1,0 +1,5 @@
+action: "youtube"
+input: "**/*[0-9S].mp4"
+output: "{stem}-{action}{suffix}"
+command: "ffmpeg -y -i \"{input}\" -c:v libx264 -preset medium -profile:v baseline -level 3.0 -b:v 8000k -pass:v 1 -passlogfile:v \"{stem_lower}\" -c:a libopus -b:a 384k -f mp4 /dev/null &&
+  ffmpeg -i \"{input}\" -c:v libx264 -preset medium -profile:v baseline -level 3.0 -b:v 8000k -pass:v 2 -passlogfile:v \"{stem_lower}\" -c:a libopus -b:a 384k \"{output}\""
