@@ -119,6 +119,16 @@ fi
 # pipx
 add_to_path_post "$HOME/.local.bin"
 
+# chruby
+chruby="/opt/homebrew/opt/chruby/share/chruby/chruby.sh"
+chruby_version="3.4.1"
+if [ -r "$chruby" ]; then
+  source $chruby
+  source $chruby_auto
+  chruby $chruby_version
+  ruby -v
+fi
+
 # Ruby Gems
 if [ -d $HOME/gems ]; then
   export GEM_HOME="$HOME/gems"

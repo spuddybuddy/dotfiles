@@ -13,7 +13,7 @@ def FindChromeBinary(chrome_folder, channel=None):
                 "Chromium.app", "Contents", "MacOS", "Chromium")
         else:
             app_name = "Google Chrome"
-            if channel:
+            if channel and channel not in ["stable","Stable"]:
                 app_name += " " + channel
             chrome_path = os.path.join(
                 chrome_folder,
@@ -39,6 +39,9 @@ def RunChrome(path, logname, enabled_features, disabled_features, user_dir, args
               extra_args = [], env = None):
   # The first element of the argument list is the name of the program being run,
   # not an actual commandline argument.
+  # TODO: Don't make this specific to MacOS.
+  # TODO: open -a is supposed to be better but it does not work.
+  #  execv_args = ['open', '-a', path] + args
   execv_args = [path] + args
   if enabled_features:
       execv_args.append("--enable-features=" + ",".join(enabled_features))
