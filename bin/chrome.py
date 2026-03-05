@@ -21,7 +21,6 @@ CHROME_USER_DIRS = {
     "dev":    ".config/google-chrome-unstable"
 }
 
-
 def RunChromeChannel(channel, extra_args):
   home = os.getenv("HOME")
   chrome_common.RunChrome(os.path.join(CHROME_PATHS[channel], "chrome"),
@@ -33,10 +32,8 @@ def RunChromeChannel(channel, extra_args):
                 "--enable-logging",
                 "--also-log-to-stderr",
                 "--no-proxy-server",
-                "--show-component-extension-options",
             ],
             extra_args)
-
 
 def main(argv):
   try:

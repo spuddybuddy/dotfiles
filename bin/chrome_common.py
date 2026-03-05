@@ -2,30 +2,50 @@ import os
 import datetime
 import sys
 
-def FindChromeBinary(chrome_folder, channel=None):
+def FindChromeBinary(chrome_folder=None, channel=None):
+    if not chrome_folder and not channel:
+        raise "One of chrome_folder or channel must be set"
+
     chrome_path = None
     if sys.platform == "win32":
+        chrome_folder = None # TODO: Add logic to find Chrome installs
         chrome_path = os.path.join(chrome_folder, "chrome.exe")
     elif sys.platform == "darwin":
+        if not chrome_folder:
+            chrome_folder="/Applications"
+
         if os.path.exists(os.path.join(chrome_folder, "Chromium.app")):
             chrome_path = os.path.join(
                 chrome_folder,
                 "Chromium.app", "Contents", "MacOS", "Chromium")
         else:
             app_name = "Google Chrome"
-            if channel:
+            if channel != "stable":
                 app_name += " " + channel
             chrome_path = os.path.join(
                 chrome_folder,
                 app_name + ".app", "Contents", "MacOS", app_name)
+    elif sys.platform == "linux":
+        # Different distributions may install in different places, so this will
+        # need to be iterated.
+        if not chrome_folder:
+            if channel == "stable":
+                chrome_folder = "/opt/google/chrome"
+            elif channel == "beta":
+                chrome_folder ="/opt/google/chrome-beta"
+            elif channel == "dev":
+                chrome_folder = "/opt/google/chrome-unstable"
+
+        chrome_path = os.path.join(chrome_folder, "chrome")
     else:
         chrome_path = os.path.join(chrome_folder, "chrome")
+
     if os.path.exists(chrome_path):
         return chrome_path
     else:
         raise RuntimeError("Where you at Chrome!?!? Looked for " + chrome_path)
 
-    
+
 # path: Path to the Chrome binary.
 # logname: Tag to identify the logfile.
 # enabled_features: List of features to enable.
