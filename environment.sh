@@ -73,6 +73,7 @@ function add_to_path_post() {
 ########### Emacs
 
 export EDITOR=mfemacs
+export GIT_EDITOR=mfemacs
 export VISUAL=mfemacs
 
 # Personal scripts
