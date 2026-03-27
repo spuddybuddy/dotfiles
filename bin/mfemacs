@@ -2,7 +2,6 @@
 # -*- Mode: Shell-script; -*-
 #
 # This is a small wrapper to run emacs or emacsclient.
-set -x
 
 # I am unable to get emacsclient working in remote desktop sessions on
 # Linux/Wayland as the client is unable to connect with the emacs server
