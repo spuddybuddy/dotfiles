@@ -75,3 +75,6 @@ source_if_readable $HOME/.bashrc
 
 # Created by `pipx` on 2025-02-14 00:43:44
 export PATH="$PATH:/Users/mfoltz/.local/bin"
+
+# Added by Jetski
+export PATH="/Users/mfoltz/.jetski/jetski/bin:$PATH"

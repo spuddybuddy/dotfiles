@@ -20,7 +20,7 @@ def FindChromeBinary(chrome_folder=None, channel=None):
                 "Chromium.app", "Contents", "MacOS", "Chromium")
         else:
             app_name = "Google Chrome"
-            if channel.lower() != "stable":
+            if channel and channel.lower() != "stable":
                 app_name += " " + channel
             chrome_path = os.path.join(
                 chrome_folder,
