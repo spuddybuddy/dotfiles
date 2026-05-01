@@ -35,6 +35,8 @@ def FindChromeBinary(chrome_folder=None, channel=None):
                 chrome_folder ="/opt/google/chrome-beta"
             elif channel == "dev":
                 chrome_folder = "/opt/google/chrome-unstable"
+            elif channel == "canary":
+                chrome_folder = "/opt/google/chrome-canary"
 
         chrome_path = os.path.join(chrome_folder, "chrome")
     else:
