@@ -33,3 +33,5 @@ source_if_readable $HOME/gob/dotfiles/.bashrc
 [ -f /home/mfoltz/.travis/travis.sh ] && source /home/mfoltz/.travis/travis.sh
 
 export SKIP_GCE_AUTH_FOR_GIT=1
+
+alias gcert-cloudtop='gcert && ssh -t cloudtop gcert' # Added by pndmcp extension install script
