@@ -33,6 +33,7 @@ export CHROMIUM_ROOT="$HOME/chrome"
 export OPENSCREEN_ROOT="$HOME/openscreen"
 export CHROMIUM_SRC="$CHROMIUM_ROOT/src"
 export LLVM_SYMBOLIZER_PATH="third_party/llvm-build/Release+Asserts/bin/llvm-symbolizer"
+export ENABLE_EDIT_MONITOR=false
 unset CC CXX
 
 # Figure out what flavor of Chromium buildtools to use

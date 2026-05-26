@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+import subprocess
+import sys
+
+def run_cmd(cmd):
+    """Helper to run a shell command and return its stdout and exit code."""
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    # Removed .strip() here so we don't accidentally trim leading spaces
+    # off the very first line of the git status output.
+    return result.stdout, result.returncode
+
+def main():
+    # 1. Get a list of all uncommitted changes
+    stdout, returncode = run_cmd(["git", "status", "--porcelain"])
+
+    if returncode != 0:
+        print("Error: Could not run git status. Are you inside a git repository?")
+        sys.exit(1)
+
+    if not stdout.strip():
+        print("No uncommitted changes found. Working tree clean.")
+        sys.exit(0)
+
+    # 2. Parse the files and prompt the user
+    # .splitlines() safely splits the output without altering characters within the lines
+    changes = stdout.splitlines()
+    files_staged = False
+
+    for change in changes:
+        if not change:
+            continue
+
+        # The first two characters indicate the status (e.g., ' M', '??', ' D')
+        status = change[:2]
+        file_path = change[3:]
+
+        # If a file has special characters or spaces, Git porcelain wraps it in quotes.
+        # We need to strip those so subprocess can find the raw file path.
+        if file_path.startswith('"') and file_path.endswith('"'):
+            file_path = file_path[1:-1]
+
+        # Ask the user if they want to stage this specific file
+        prompt = f"Stage '{file_path}' (status: {status})? [y/N]: "
+        answer = input(prompt).strip().lower()
+
+        if answer in ['y', 'yes']:
+            # git add works for untracked, modified, and deleted files
+            _, add_code = run_cmd(["git", "add", file_path])
+            if add_code == 0:
+                print(f"  -> Staged {file_path}")
+                files_staged = True
+            else:
+                print(f"  -> Error staging {file_path}")
+        else:
+            print(f"  -> Skipped {file_path}")
+
+    # 3. Amend the commit if any files were staged
+    if files_staged:
+        print("\nAmending the last commit...")
+        result = subprocess.run(["git", "commit", "--amend", "--no-edit"])
+
+        if result.returncode == 0:
+            print("Successfully amended the last commit!")
+        else:
+            print("Failed to amend the commit.")
+    else:
+        print("\nNo new files were staged. Skipping amend.")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.")
+        sys.exit(1)
