@@ -70,6 +70,68 @@ def get_upstream_branch(branch, cwd=None):
   return result.stdout.strip()
 
 
+def get_branch_commits(branch, upstream, cwd=None):
+  """Gets a list of commits unique to the branch (upstream..branch)."""
+  result = subprocess.run(['git', 'log', '--oneline', f'{upstream}..{branch}'], capture_output=True, text=True, cwd=cwd)
+  if result.returncode != 0:
+    return []
+  return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def squash_branch_commits(branch, upstream, cwd=None):
+  """Squashes all commits on branch unique to upstream into a single commit."""
+  orig_commit_res = subprocess.run(['git', 'rev-parse', branch], capture_output=True, text=True, cwd=cwd)
+  if orig_commit_res.returncode != 0:
+    print(f"Error: Could not resolve branch '{branch}' commit hash.", file=sys.stderr)
+    return False
+  orig_commit = orig_commit_res.stdout.strip()
+
+  # 1. Get the combined commit messages
+  result = subprocess.run(['git', 'log', '--format=%B', '--reverse', f'{upstream}..{branch}'], capture_output=True, text=True, cwd=cwd)
+  if result.returncode != 0:
+    print(f"Error: Failed to get commit messages for '{branch}'.", file=sys.stderr)
+    return False
+
+  commit_messages = result.stdout.strip()
+  
+  # 2. Soft reset to upstream
+  try:
+    run_command(['git', 'reset', '--soft', upstream], cwd=cwd)
+  except RunCommandError as e:
+    print(f"Error during soft reset: {e}", file=sys.stderr)
+    return False
+
+  # 3. Write combined messages to a temp file
+  state_dir = os.path.join(cwd or os.getcwd(), '.git')
+  msg_file = os.path.join(state_dir, 'arborist_squash_msg')
+  try:
+    with open(msg_file, 'w') as f:
+      f.write(commit_messages)
+  except Exception as e:
+    print(f"Error writing temporary commit message file: {e}", file=sys.stderr)
+    print("Restoring branch to original state...")
+    subprocess.run(['git', 'reset', '--hard', orig_commit], cwd=cwd)
+    return False
+
+  # 4. Commit using the temp file and opening the editor
+  try:
+    run_command(['git', 'commit', '-F', msg_file, '-e'], cwd=cwd)
+    print(f"Successfully squashed commits on '{branch}'.")
+    success = True
+  except RunCommandError as e:
+    print(f"Squash commit aborted or failed. Restoring branch '{branch}' to original state...", file=sys.stderr)
+    subprocess.run(['git', 'reset', '--hard', orig_commit], cwd=cwd)
+    success = False
+  finally:
+    if os.path.exists(msg_file):
+      try:
+        os.remove(msg_file)
+      except Exception:
+        pass
+
+  return success
+
+
 def load_state(cwd=None):
   state_path = os.path.join(cwd or os.getcwd(), STATE_FILE)
   if os.path.exists(state_path):
@@ -229,6 +291,27 @@ def rebase_local_branches(cwd=None):
       state['pending_branches'].pop(0)
       save_state(state, cwd=cwd)
       continue
+
+    # Checkout the branch first before checking commits or squashing
+    print(f"\nChecking out '{branch}'...")
+    try:
+      run_command(['git', 'checkout', branch], cwd=cwd)
+    except RunCommandError as e:
+      print(f"Error checking out branch '{branch}': {e}", file=sys.stderr)
+      state['pending_branches'].pop(0)
+      save_state(state, cwd=cwd)
+      continue
+
+    # Offer to squash if branch has 2 or more commits relative to upstream
+    commits = get_branch_commits(branch, upstream_branch, cwd=cwd)
+    if len(commits) >= 2:
+      print(f"\nCommits unique to '{branch}' relative to '{upstream_branch}':")
+      for commit in commits:
+        print(f"  {commit}")
+      
+      squash_ans = input(f"This branch has {len(commits)} commits. Do you want to squash them into a single commit? [y/N]: ").strip().lower()
+      if squash_ans in ['y', 'yes']:
+        squash_branch_commits(branch, upstream_branch, cwd=cwd)
 
     print(f"\nRebasing '{branch}' onto '{upstream_branch}'...")
     state['current_rebasing_branch'] = branch
