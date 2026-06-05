@@ -70,9 +70,25 @@ def get_upstream_branch(branch, cwd=None):
   return result.stdout.strip()
 
 
+def get_fork_point(branch, upstream, cwd=None):
+  """Gets the fork point commit hash between branch and upstream."""
+  # Try --fork-point first as it is more precise for rebased upstreams
+  result = subprocess.run(['git', 'merge-base', '--fork-point', upstream, branch], capture_output=True, text=True, cwd=cwd)
+  if result.returncode == 0 and result.stdout.strip():
+    return result.stdout.strip()
+  # Fall back to standard merge-base
+  result = subprocess.run(['git', 'merge-base', upstream, branch], capture_output=True, text=True, cwd=cwd)
+  if result.returncode == 0:
+    return result.stdout.strip()
+  return None
+
+
 def get_branch_commits(branch, upstream, cwd=None):
   """Gets a list of commits unique to the branch (upstream..branch)."""
-  result = subprocess.run(['git', 'log', '--oneline', f'{upstream}..{branch}'], capture_output=True, text=True, cwd=cwd)
+  fork_point = get_fork_point(branch, upstream, cwd=cwd)
+  if not fork_point:
+    return []
+  result = subprocess.run(['git', 'log', '--oneline', f'{fork_point}..{branch}'], capture_output=True, text=True, cwd=cwd)
   if result.returncode != 0:
     return []
   return [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -86,17 +102,22 @@ def squash_branch_commits(branch, upstream, cwd=None):
     return False
   orig_commit = orig_commit_res.stdout.strip()
 
+  fork_point = get_fork_point(branch, upstream, cwd=cwd)
+  if not fork_point:
+    print(f"Error: Could not find fork point between '{branch}' and '{upstream}'.", file=sys.stderr)
+    return False
+
   # 1. Get the combined commit messages
-  result = subprocess.run(['git', 'log', '--format=%B', '--reverse', f'{upstream}..{branch}'], capture_output=True, text=True, cwd=cwd)
+  result = subprocess.run(['git', 'log', '--format=%B', '--reverse', f'{fork_point}..{branch}'], capture_output=True, text=True, cwd=cwd)
   if result.returncode != 0:
     print(f"Error: Failed to get commit messages for '{branch}'.", file=sys.stderr)
     return False
 
   commit_messages = result.stdout.strip()
   
-  # 2. Soft reset to upstream
+  # 2. Soft reset to fork point
   try:
-    run_command(['git', 'reset', '--soft', upstream], cwd=cwd)
+    run_command(['git', 'reset', '--soft', fork_point], cwd=cwd)
   except RunCommandError as e:
     print(f"Error during soft reset: {e}", file=sys.stderr)
     return False
