@@ -70,42 +70,21 @@ def get_upstream_branch(branch, cwd=None):
   return result.stdout.strip()
 
 
-def get_fork_point(branch, upstream, cwd=None):
-  """Gets the fork point commit hash between branch and upstream."""
-  # Try --fork-point first as it is more precise for rebased upstreams
-  result = subprocess.run(['git', 'merge-base', '--fork-point', upstream, branch], capture_output=True, text=True, cwd=cwd)
-  if result.returncode == 0 and result.stdout.strip():
-    return result.stdout.strip()
-  # Fall back to standard merge-base
-  result = subprocess.run(['git', 'merge-base', upstream, branch], capture_output=True, text=True, cwd=cwd)
-  if result.returncode == 0:
-    return result.stdout.strip()
-  return None
-
-
-def get_branch_commits(branch, upstream, cwd=None):
-  """Gets a list of commits unique to the branch (upstream..branch)."""
-  fork_point = get_fork_point(branch, upstream, cwd=cwd)
-  if not fork_point:
-    return []
+def get_commits_since_fork_point(branch, fork_point, cwd=None):
+  """Gets a list of commits unique to the branch (fork_point..branch)."""
   result = subprocess.run(['git', 'log', '--oneline', f'{fork_point}..{branch}'], capture_output=True, text=True, cwd=cwd)
   if result.returncode != 0:
     return []
   return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
-def squash_branch_commits(branch, upstream, cwd=None):
-  """Squashes all commits on branch unique to upstream into a single commit."""
+def squash_branch_commits(branch, fork_point, cwd=None):
+  """Squashes all commits on branch unique to fork_point into a single commit."""
   orig_commit_res = subprocess.run(['git', 'rev-parse', branch], capture_output=True, text=True, cwd=cwd)
   if orig_commit_res.returncode != 0:
     print(f"Error: Could not resolve branch '{branch}' commit hash.", file=sys.stderr)
     return False
   orig_commit = orig_commit_res.stdout.strip()
-
-  fork_point = get_fork_point(branch, upstream, cwd=cwd)
-  if not fork_point:
-    print(f"Error: Could not find fork point between '{branch}' and '{upstream}'.", file=sys.stderr)
-    return False
 
   # 1. Get the combined commit messages
   result = subprocess.run(['git', 'log', '--format=%B', '--reverse', f'{fork_point}..{branch}'], capture_output=True, text=True, cwd=cwd)
@@ -139,7 +118,7 @@ def squash_branch_commits(branch, upstream, cwd=None):
     run_command(['git', 'commit', '-F', msg_file, '-e'], cwd=cwd)
     print(f"Successfully squashed commits on '{branch}'.")
     success = True
-  except RunCommandError as e:
+  except RunCommandError:
     print(f"Squash commit aborted or failed. Restoring branch '{branch}' to original state...", file=sys.stderr)
     subprocess.run(['git', 'reset', '--hard', orig_commit], cwd=cwd)
     success = False
@@ -285,23 +264,64 @@ def rebase_local_branches(cwd=None):
     except RunCommandError as e:
       print(f"Warning: Failed to run git map-branches: {e}", file=sys.stderr)
 
-    # Initialize state for step 2
+    # Initialize state for steps 2 and 3
     all_branches = get_local_branches(cwd=cwd)
     pending_branches = [b for b in all_branches if b not in ['main', 'lkgr']]
+    
+    fork_points = {}
+    for b in pending_branches:
+      upstream = get_upstream_branch(b, cwd=cwd)
+      if upstream:
+        res = subprocess.run(['git', 'merge-base', upstream, b], capture_output=True, text=True, cwd=cwd)
+        if res.returncode == 0:
+          fork_points[b] = res.stdout.strip()
+
     state = {
       'original_branch': original_branch,
       'pending_branches': pending_branches,
+      'fork_points': fork_points,
+      'squashing_completed': False,
       'current_rebasing_branch': None
     }
     save_state(state, cwd=cwd)
 
-  # 2. For each local branch that is not main or lkgr, offer to rebase it on its upstream
-  print("\n--- 2. Rebasing Local Branches ---")
+  # --- Phase 1: Squashing ---
+  if not state.get('squashing_completed'):
+    print("\n--- 2. Squashing Local Branches ---")
+    for branch in list(state['pending_branches']):
+      upstream_branch = get_upstream_branch(branch, cwd=cwd)
+      fork_point = state['fork_points'].get(branch)
+      if not upstream_branch or not fork_point:
+        continue
+
+      commits = get_commits_since_fork_point(branch, fork_point, cwd=cwd)
+      if len(commits) >= 2:
+        print(f"\nChecking out '{branch}'...")
+        try:
+          run_command(['git', 'checkout', branch], cwd=cwd)
+        except RunCommandError as e:
+          print(f"Error checking out branch '{branch}': {e}", file=sys.stderr)
+          continue
+
+        print(f"\nCommits unique to '{branch}' relative to '{upstream_branch}':")
+        for commit in commits:
+          print(f"  {commit}")
+        
+        squash_ans = input(f"This branch has {len(commits)} commits. Do you want to squash them into a single commit? [y/N]: ").strip().lower()
+        if squash_ans in ['y', 'yes']:
+          squash_branch_commits(branch, fork_point, cwd=cwd)
+
+    state['squashing_completed'] = True
+    save_state(state, cwd=cwd)
+
+  # --- Phase 2: Rebasing ---
+  print("\n--- 3. Rebasing Local Branches ---")
   while state['pending_branches']:
     branch = state['pending_branches'][0]
     upstream_branch = get_upstream_branch(branch, cwd=cwd)
-    if not upstream_branch:
-      print(f"\nBranch '{branch}' has no upstream configured. Skipping.")
+    fork_point = state['fork_points'].get(branch)
+    if not upstream_branch or not fork_point:
+      print(f"\nBranch '{branch}' has no upstream or fork point configured. Skipping.")
       state['pending_branches'].pop(0)
       save_state(state, cwd=cwd)
       continue
@@ -313,33 +333,12 @@ def rebase_local_branches(cwd=None):
       save_state(state, cwd=cwd)
       continue
 
-    # Checkout the branch first before checking commits or squashing
-    print(f"\nChecking out '{branch}'...")
-    try:
-      run_command(['git', 'checkout', branch], cwd=cwd)
-    except RunCommandError as e:
-      print(f"Error checking out branch '{branch}': {e}", file=sys.stderr)
-      state['pending_branches'].pop(0)
-      save_state(state, cwd=cwd)
-      continue
-
-    # Offer to squash if branch has 2 or more commits relative to upstream
-    commits = get_branch_commits(branch, upstream_branch, cwd=cwd)
-    if len(commits) >= 2:
-      print(f"\nCommits unique to '{branch}' relative to '{upstream_branch}':")
-      for commit in commits:
-        print(f"  {commit}")
-      
-      squash_ans = input(f"This branch has {len(commits)} commits. Do you want to squash them into a single commit? [y/N]: ").strip().lower()
-      if squash_ans in ['y', 'yes']:
-        squash_branch_commits(branch, upstream_branch, cwd=cwd)
-
     print(f"\nRebasing '{branch}' onto '{upstream_branch}'...")
     state['current_rebasing_branch'] = branch
     save_state(state, cwd=cwd)
 
     try:
-      run_command(['git', 'rebase', '--onto', upstream_branch, '--fork-point', upstream_branch, branch], cwd=cwd)
+      run_command(['git', 'rebase', '--onto', upstream_branch, fork_point, branch], cwd=cwd)
     except RunCommandError:
       print(f"\nRebase of '{branch}' stopped (likely due to merge conflicts or error).")
       print("Please resolve the conflicts, and then run this script again to resume.")
