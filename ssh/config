@@ -1,10 +1,6 @@
-# Use full hostname unique files for multiplex sockets, to prevent
-# connections to github.com-foo and github.com-bar from sharing a
-# socket.  That breaks my per-host identity configuration.
-Host *
-  ControlMaster auto
-  ControlPath ~/.ssh/ctrl-%r@%h:%p
-  ControlPersist 10m
+# Disable multiplexing for github.com as it breaks identity management.
+Host github.com github.com-*
+  ControlMaster no
 
 # Work account
 # Repo URLs are: git@github.com-markafoltz:<user>/<repo>
