@@ -1,3 +1,11 @@
+# Use full hostname unique files for multiplex sockets, to prevent
+# connections to github.com-foo and github.com-bar from sharing a
+# socket.  That breaks my per-host identity configuration.
+Host *
+  ControlMaster auto
+  ControlPath ~/.ssh/ctrl-%r@%h:%p
+  ControlPersist 10m
+
 # Work account
 # Repo URLs are: git@github.com-markafoltz:<user>/<repo>
 Host github.com-markafoltz
