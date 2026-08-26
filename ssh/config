@@ -4,6 +4,7 @@ Host github.com-markafoltz
   HostName github.com
   User git
   IdentityFile ~/.ssh/id_github_markafoltz
+  IdentitiesOnly Yes
 
 # Personal account
 # Repo URLs are: git@github.com-spuddybuddy:<user>/<repo>
@@ -11,3 +12,4 @@ Host github.com-spuddybuddy
   HostName github.com
   User git
   IdentityFile ~/.ssh/id_github_spuddybuddy
+  IdentitiesOnly Yes
