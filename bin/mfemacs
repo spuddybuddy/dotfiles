@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # -*- Mode: Shell-script; -*-
 #
 # This is a small wrapper to run emacs or emacsclient.
@@ -15,8 +15,13 @@ if [ "$OS" == 'Darwin' ]; then
   emacsclient="/Applications/Emacs.app/Contents/MacOS/bin/emacsclient";
 fi
 
-# Use -c to create a new graphical frame
-# -a launches emacs in daemon mode if it isn't already running.
-# -r avoids launching extra frames
-# Do NOT use -n here if you want git to wait.
-exec "$emacsclient" -r -c -a "" "$@"
+if [ "$XDG_SESSION_TYPE" == 'tty' ]; then
+  # Launch a terminal session.
+  exec "$emacsclient" -nw -a "" "$@"
+else
+  # Use -c to create a new graphical frame
+  # -a launches emacs in daemon mode if it isn't already running.
+  # -r avoids launching extra frames
+  # Do NOT use -n here if you want git to wait.
+  exec "$emacsclient" -r -c -a "" "$@"
+fi

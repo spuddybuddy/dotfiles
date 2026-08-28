@@ -78,6 +78,46 @@ def has_upstream_remote(cwd=None):
 CANDIDATE_BASE_BRANCHES = ['main', 'master', 'lkgr', 'gh-pages']
 
 
+def probe_remote_base_branches(remote, cwd=None):
+  """Queries remote server for existing candidate base branches without downloading objects."""
+  cmd = ['git', 'ls-remote', '--heads', remote] + CANDIDATE_BASE_BRANCHES
+  result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+  if result.returncode != 0:
+    return []
+  found = []
+  for line in result.stdout.splitlines():
+    parts = line.strip().split()
+    if len(parts) >= 2:
+      ref = parts[1]  # e.g. refs/heads/main
+      for branch in CANDIDATE_BASE_BRANCHES:
+        if ref == f'refs/heads/{branch}':
+          found.append(branch)
+  return found
+
+
+def optimized_fetch(remote, branches=None, cwd=None):
+  """Fetches only target base branches with --no-tags and memory optimizations."""
+  if branches is None:
+    branches = probe_remote_base_branches(remote, cwd=cwd)
+
+  fetch_cmd = [
+      'git',
+      '-c', 'core.deltaBaseCacheLimit=2g',
+      'fetch',
+      '--no-tags',
+      '--no-recurse-submodules',
+      remote,
+  ]
+  if branches:
+    print(f"\n--- Fetching updates for {', '.join(branches)} from {remote} ---")
+    fetch_cmd.extend([f'+refs/heads/{b}:refs/remotes/{remote}/{b}' for b in branches])
+  else:
+    print(f"\n--- Fetching updates from {remote} ---")
+
+  run_command(fetch_cmd, cwd=cwd)
+  return True
+
+
 def get_base_branches(cwd=None):
   """Returns existing base/trunk branches (main, master, lkgr, gh-pages) in this repository."""
   return [
@@ -321,7 +361,7 @@ def is_rebase_in_progress(cwd=None):
   return os.path.exists(rebase_merge) or os.path.exists(rebase_apply)
 
   
-def update_base_branches(cwd=None):
+def update_base_branches(no_fetch=False, cwd=None):
   """Manages and updates base tracking branches (main, master, lkgr, gh-pages) from origin or upstream."""
   repo_dir = cwd or os.getcwd()
   print(f"Operating in: {repo_dir}")
@@ -352,21 +392,22 @@ def update_base_branches(cwd=None):
   original_branch = get_current_branch(cwd=repo_dir)
   print(f"Original branch: {original_branch}")
 
-  # Fetch updates from origin first to keep origin tracking refs fresh
-  print("\n--- Fetching updates from origin ---")
-  try:
-    run_command(['git', 'fetch', 'origin'], cwd=repo_dir)
-  except RunCommandError as e:
-    print(f"Error fetching from origin: {e}", file=sys.stderr)
-    return False
-
-  if target_remote == 'upstream':
-    print("\n--- Fetching updates from upstream ---")
+  if not no_fetch:
+    # Fetch updates from origin first to keep origin tracking refs fresh
     try:
-      run_command(['git', 'fetch', 'upstream'], cwd=repo_dir)
+      optimized_fetch('origin', cwd=repo_dir)
     except RunCommandError as e:
-      print(f"Error fetching from upstream: {e}", file=sys.stderr)
+      print(f"Error fetching from origin: {e}", file=sys.stderr)
       return False
+
+    if target_remote == 'upstream':
+      try:
+        optimized_fetch('upstream', cwd=repo_dir)
+      except RunCommandError as e:
+        print(f"Error fetching from upstream: {e}", file=sys.stderr)
+        return False
+  else:
+    print("\nSkipping remote fetch (--no-fetch specified).")
 
   # Ensure local base branches exist and track origin
   ensure_base_branches(cwd=repo_dir)
@@ -403,7 +444,7 @@ def update_base_branches(cwd=None):
   return True
 
 
-def rebase_local_branches(cwd=None):
+def rebase_local_branches(no_fetch=False, cwd=None):
   """Mode to rebase existing local branches on their upstreams."""
   cwd = cwd or os.getcwd()
   print(f"Operating in: {cwd}")
@@ -471,7 +512,7 @@ def rebase_local_branches(cwd=None):
       print("\nDetected 'upstream' remote (fork repository).")
       sync_ans = input("Do you want to sync local base branches (main/master/gh-pages) with 'upstream' before rebasing local branches? [Y/n]: ").strip().lower()
       if sync_ans not in ['n', 'no']:
-        if not update_base_branches(cwd=cwd):
+        if not update_base_branches(no_fetch=no_fetch, cwd=cwd):
           print("Base branch update aborted or encountered an error. Stopping rebase session.", file=sys.stderr)
           return
 
@@ -610,6 +651,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="Arborist: Git branch management utility (GitHub & Git-on-Borg).")
   parser.add_argument('--update', '-u', action='store_true', help="Update base tracking branches (main, master, lkgr, gh-pages) from remote origin.")
   parser.add_argument('--rebase', '-r', action='store_true', help="Rebase existing local branches on their upstreams.")
+  parser.add_argument('--no-fetch', '-n', action='store_true', help="Skip fetching remote updates.")
   args = parser.parse_args()
 
   if not args.update and not args.rebase:
@@ -625,7 +667,7 @@ if __name__ == '__main__':
     sys.exit(1)
 
   if args.update:
-    update_base_branches()
+    update_base_branches(no_fetch=args.no_fetch)
 
   if args.rebase:
-    rebase_local_branches()
+    rebase_local_branches(no_fetch=args.no_fetch)
