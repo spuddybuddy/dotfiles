@@ -4,6 +4,11 @@
 
 # Sourced for every shell.
 
+# enable programmable completion features
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+      . /etc/bash_completion
+fi
+
 function source_if_readable() {
   [ -r $1 ] && source $1
 }
