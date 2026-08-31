@@ -33,10 +33,20 @@ source_if_readable $HOME/github/spuddybuddy/dotfiles/bash_logging.sh
 mf_log "Executing $HOME/.bash_profile"
 
 # Take a big dump.
-ulimit -c unlimited
+ulimit_c_out=$(ulimit -c unlimited 2>&1)
+mf_log "ulimit_c_out=$ulimit_c_out"
 
-# Set a high per-terminal file limit.  This may be capped on some systems.
-ulimit -n 200000
+# Maximize per-terminal open file descriptor limits across Linux and macOS.
+if [ "$(uname)" = "Darwin" ]; then
+  # On macOS, query the kernel per-process limit; fall back to 128000 if unset.
+  ulimit_n_target="$(/usr/sbin/sysctl -n kern.maxfilesperproc 2>/dev/null || echo 128000)"
+  ulimit_n_out="$(ulimit -n "$ulimit_n_target" 2>&1)"
+else
+  # On Linux, raise soft limit to the system hard limit.
+  ulimit_n_target="$(ulimit -Hn 2>/dev/null || echo hard)"
+  ulimit_n_out="$(ulimit -n "$ulimit_n_target" 2>&1)"
+fi
+mf_log "ulimit_n_target=$ulimit_n_target ulimit_n_out=$ulimit_n_out"
 
 # Set umask appropriately.
 umask 022
