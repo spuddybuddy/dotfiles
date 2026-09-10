@@ -26,7 +26,7 @@ if sys.version_info < (3, 11):
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
             os.execv(candidate, [candidate] + sys.argv)
 
-# Locate depot_tools for gerrit_util and gerrit_client
+# Locate depot_tools for gerrit_client
 DEPOT_TOOLS_CANDIDATES = [
     os.environ.get("DEPOT_TOOLS", ""),
     os.path.expanduser("~/depot_tools"),
@@ -38,14 +38,7 @@ DEPOT_TOOLS_DIR: Optional[str] = None
 for candidate_dir in DEPOT_TOOLS_CANDIDATES:
     if candidate_dir and os.path.isdir(candidate_dir):
         DEPOT_TOOLS_DIR = candidate_dir
-        if candidate_dir not in sys.path:
-            sys.path.insert(0, candidate_dir)
         break
-
-try:
-    import gerrit_util
-except Exception:
-    gerrit_util = None
 
 
 def prettify_repo_path(repo_path: str) -> str:
@@ -113,10 +106,10 @@ def get_repo_cls(repo_path: str) -> List[Tuple[str, str, str]]:
     return results
 
 
-def call_gerrit_client_fallback(
+def call_gerrit_client(
     host: str, command: str, args: List[str]
 ) -> Optional[Any]:
-    """Fallback to calling gerrit_client.py when gerrit_util is not directly importable."""
+    """Call gerrit_client.py using vpython3."""
     gerrit_client = shutil.which("gerrit_client.py")
     if not gerrit_client and DEPOT_TOOLS_DIR:
         candidate = os.path.join(DEPOT_TOOLS_DIR, "gerrit_client.py")
@@ -126,12 +119,24 @@ def call_gerrit_client_fallback(
     if not gerrit_client:
         return None
 
+    vpython = shutil.which("vpython3")
+    if not vpython and DEPOT_TOOLS_DIR:
+        candidate = os.path.join(DEPOT_TOOLS_DIR, "vpython3")
+        if os.path.isfile(candidate):
+            vpython = candidate
+    py_exec = vpython if vpython else sys.executable
+
+    # Ensure host has https:// scheme
+    if not host.startswith("http://") and not host.startswith("https://"):
+        host = f"https://{host}"
+    host = host.rstrip("/")
+
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp_file:
         tmp_json = tmp_file.name
 
     try:
         cmd = [
-            "vpython3" if shutil.which("vpython3") else sys.executable,
+            py_exec,
             gerrit_client,
             command,
             "--host",
@@ -160,25 +165,7 @@ def call_gerrit_client_fallback(
 
 def query_cl_detail(host: str, cl_id: str) -> Optional[Dict[str, Any]]:
     """Query Gerrit for change details, labels, requirements, and revisions."""
-    netloc = host.replace("https://", "").replace("http://", "").rstrip("/")
-    if gerrit_util:
-        try:
-            return gerrit_util.GetChangeDetail(
-                netloc,
-                cl_id,
-                o_params=[
-                    "DETAILED_LABELS",
-                    "CURRENT_REVISION",
-                    "MESSAGES",
-                    "SUBMITTABLE",
-                    "SUBMIT_REQUIREMENTS",
-                ],
-            )
-        except Exception:
-            pass
-
-    # Fallback to gerrit_client.py
-    data = call_gerrit_client_fallback(
+    data = call_gerrit_client(
         host,
         "changes",
         [
@@ -188,6 +175,8 @@ def query_cl_detail(host: str, cl_id: str) -> Optional[Dict[str, Any]]:
             "DETAILED_LABELS",
             "-o",
             "CURRENT_REVISION",
+            "-o",
+            "MESSAGES",
             "-o",
             "SUBMITTABLE",
             "-o",
@@ -201,15 +190,7 @@ def query_cl_detail(host: str, cl_id: str) -> Optional[Dict[str, Any]]:
 
 def query_cl_comments(host: str, cl_id: str) -> Dict[str, Any]:
     """Query Gerrit for comments on a change."""
-    netloc = host.replace("https://", "").replace("http://", "").rstrip("/")
-    if gerrit_util:
-        try:
-            return gerrit_util.CallGerritApi(netloc, f"changes/{cl_id}/comments")
-        except Exception:
-            pass
-
-    # Fallback to gerrit_client.py
-    data = call_gerrit_client_fallback(host, "comments", ["--change", cl_id])
+    data = call_gerrit_client(host, "comments", ["--change", cl_id])
     if isinstance(data, dict):
         return data
     return {}
@@ -265,8 +246,7 @@ def format_cr_votes(detail: Dict[str, Any]) -> str:
     cr_label = labels.get("Code-Review", {})
     all_votes = cr_label.get("all", [])
 
-    positive: List[str] = []
-    negative: List[str] = []
+    parts: List[str] = []
 
     for vote in all_votes:
         val = vote.get("value", 0)
@@ -274,15 +254,9 @@ def format_cr_votes(detail: Dict[str, Any]) -> str:
         if not name:
             name = f"Account {vote.get('_account_id')}"
         if val > 0:
-            positive.append(f"+{val} ({name})")
+            parts.append(f"**+{val}** ({name})")
         elif val < 0:
-            negative.append(f"{val} ({name})")
-
-    parts = []
-    for p in positive:
-        parts.append(f"**+1** ({p.split('(')[1] if '(' in p else p}")
-    for n in negative:
-        parts.append(f"**-1** ({n.split('(')[1] if '(' in n else n}")
+            parts.append(f"**{val}** ({name})")
 
     if not parts:
         return "*None*"
