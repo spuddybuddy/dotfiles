@@ -118,9 +118,6 @@ if [ -d $HOME/.pyenv ]; then
     add_to_path_pre "$PYENV_ROOT/bin"
 fi
 
-# pipx
-add_to_path_post "$HOME/.local.bin"
-
 # chruby
 chruby="/opt/homebrew/opt/chruby/share/chruby/chruby.sh"
 chruby_auto="/opt/homebrew/opt/chruby/share/chruby/auto.sh"
@@ -146,6 +143,9 @@ add_to_path_pre $HOME/.cargo/bin
 
 # Go installed commands.
 add_to_path_pre $HOME/go/bin
+
+# Added by LM Studio CLI (lms)
+add_to_path_post $HOME/.lmstudio/bin
 
 [ -n "$mypath_pre" ] && export PATH="$mypath_pre:$PATH"
 [ -n "$mypath_post" ] && export PATH="$PATH:$mypath_post"
