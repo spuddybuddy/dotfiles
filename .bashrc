@@ -4,6 +4,11 @@
 
 # Sourced for every shell.
 
+# enable programmable completion features
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+      . /etc/bash_completion
+fi
+
 function source_if_readable() {
   [ -r $1 ] && source $1
 }
@@ -32,7 +37,6 @@ source_if_readable $HOME/gob/dotfiles/.bashrc
 # added by travis gem
 [ -f /home/mfoltz/.travis/travis.sh ] && source /home/mfoltz/.travis/travis.sh
 
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/mfoltz/.lmstudio/bin"
-# End of LM Studio CLI section
+export SKIP_GCE_AUTH_FOR_GIT=1
+alias gcert-cloudtop='gcert && ssh -t cloudtop gcert' # Added by pndmcp extension install script
 

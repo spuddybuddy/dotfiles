@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 # Usage: runmany N P <command> <args>...
 # N - the number of times to run the test
 # P - if 1, run the tests in parallel

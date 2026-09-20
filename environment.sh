@@ -33,6 +33,7 @@ export CHROMIUM_ROOT="$HOME/chrome"
 export OPENSCREEN_ROOT="$HOME/openscreen"
 export CHROMIUM_SRC="$CHROMIUM_ROOT/src"
 export LLVM_SYMBOLIZER_PATH="third_party/llvm-build/Release+Asserts/bin/llvm-symbolizer"
+export ENABLE_EDIT_MONITOR=false
 unset CC CXX
 
 # Figure out what flavor of Chromium buildtools to use
@@ -73,6 +74,7 @@ function add_to_path_post() {
 ########### Emacs
 
 export EDITOR=mfemacs
+export GIT_EDITOR=mfemacs
 export VISUAL=mfemacs
 
 # Personal scripts
@@ -118,6 +120,18 @@ fi
 
 # pipx
 add_to_path_post "$HOME/.local.bin"
+
+# chruby
+chruby="/opt/homebrew/opt/chruby/share/chruby/chruby.sh"
+chruby_auto="/opt/homebrew/opt/chruby/share/chruby/auto.sh"
+chruby_version="3.4.1"
+
+if [ -r "$chruby" ]; then
+  source "$chruby"
+  [ -r "$chruby_auto" ] && source "$chruby_auto"
+  chruby "$chruby_version"
+  ruby -v
+fi
 
 # Ruby Gems
 if [ -d $HOME/gems ]; then

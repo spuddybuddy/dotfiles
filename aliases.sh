@@ -14,6 +14,7 @@ alias more=less
 alias an=autoninja
 alias anr='autoninja -C out/release'
 alias and='autoninja -C out/debug'
+alias reauth='echo "Requesting Gerrit reauth..." && git credential-luci reauth'
 
 ### !!! ACHTUNG !!!
 ### If you change this, update the dirtrack-list regexp in .emacs so

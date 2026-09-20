@@ -40,8 +40,8 @@
     (quote
      ((tool-bar-lines . 0)
       (menu-bar-lines . 0)
-      (width . 102)
-      (height . 69)
+      (width . 100)
+      (height . 65)
       (cursor-color . "gold1")
       (pointer-color . "gold1"))))
  '(dirtrack-list (quote ("\\[[A-Za-z@-]+ \\([^]]+\\)\\]\\$" 1)))
