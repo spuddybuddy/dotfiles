@@ -31,3 +31,8 @@ source_if_readable $HOME/gob/dotfiles/.bashrc
 
 # added by travis gem
 [ -f /home/mfoltz/.travis/travis.sh ] && source /home/mfoltz/.travis/travis.sh
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/mfoltz/.lmstudio/bin"
+# End of LM Studio CLI section
+

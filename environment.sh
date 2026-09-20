@@ -106,8 +106,8 @@ add_to_path_post $HOME/.local/bin
 
 # Homebrew and locally built binaries on MacOS
 if [ $OS == 'Darwin' ]; then
-  add_to_path_post /opt/homebrew/bin
-  add_to_path_post /opt/local/bin
+  add_to_path_pre /opt/homebrew/bin
+  add_to_path_pre /opt/local/bin
 fi
 
 # pyenv: https://github.com/pyenv/pyenv
