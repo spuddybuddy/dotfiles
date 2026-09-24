@@ -171,6 +171,8 @@ def create_draft(
         "PUT",
         "--body",
         json.dumps(comment_input),
+        "--accept_status",
+        "200,201",
     ]
     res = call_gerrit_client(host, "rawapi", raw_args)
     if isinstance(res, dict):
