@@ -5,9 +5,7 @@ import re
 from datetime import datetime, timedelta
 
 def get_today():
-    # In a real scenario, this would be datetime.now()
-    # For the context of the session where this was created:
-    return datetime(2026, 5, 1)
+    return datetime.now()
 
 def process_files(files, filter_str, action, audit_limit_days=90):
     today = get_today()
