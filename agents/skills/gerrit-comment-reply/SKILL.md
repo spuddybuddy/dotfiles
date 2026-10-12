@@ -1,12 +1,12 @@
 ---
 name: gerrit-comment-reply
 description: >
-  Query published Gerrit comments and post batch or single replies to comment threads, patchset-level comments, or review messages using depot_tools gerrit_client.py and vpython3.
+  Query published and draft Gerrit comments (including standalone draft comments and draft replies) and post batch or single replies to comment threads, patchset-level comments, or review messages using depot_tools gerrit_client.py and vpython3.
 ---
 
 # Gerrit Comment Reply
 
-This skill enables agents and engineers to inspect published review comments on a Gerrit Change List (CL), trace comment threads, and post replies (marking threads resolved or unresolved) in batch or individually using `depot_tools`'s command-line tool `gerrit_client.py` and `vpython3`.
+This skill enables agents and engineers to inspect published review comments **and unpublished draft comments/replies** on a Gerrit Change List (CL), trace comment threads, and post replies (marking threads resolved or unresolved) in batch or individually using `depot_tools`'s command-line tool `gerrit_client.py` and `vpython3`.
 
 > [!IMPORTANT]
 > **Draft Mode is the Default:**
@@ -19,6 +19,7 @@ This skill enables agents and engineers to inspect published review comments on 
 
 Activate this skill when the user:
 - Asks to reply to, answer, or resolve review comments on a Gerrit CL (especially in batch).
+- Wants to inspect unpublished draft comments or draft replies already left on a CL.
 - Wants to stage draft replies so they can review them in the Gerrit Web UI before publishing.
 - Wants to list or inspect open/unresolved comments on a specific CL or branch.
 - Asks to post a patchset-level comment or general review message to Gerrit.
@@ -38,19 +39,24 @@ python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-comment-r
 
 ## Core Workflows
 
-### 1. Inspect / List Comments on a CL
+### 1. Inspect / List Comments and Drafts on a CL
 
-View all comments on the current branch's CL:
+View all published comments, standalone draft comments, and draft replies on the current branch's CL:
 ```bash
 python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-comment-reply/gerrit_comment_reply.py --list
 ```
 
-View only unresolved comments on a specific CL:
+View only unresolved threads and unpublished drafts on a specific CL:
 ```bash
-python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-comment-reply/gerrit_comment_reply.py --cl 8358885 --list --unresolved-only
+python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-comment-reply/gerrit_comment_reply.py --cl 8496587 --list --unresolved-only
 ```
 
-Each thread displays its location, resolution status (`🔴 UNRESOLVED` vs `🟢 RESOLVED`), author, patchset, timestamp, and unique comment ID (e.g. `[3651ea3e_b9232d19]`).
+View **only** threads containing your unpublished draft comments or draft replies:
+```bash
+python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-comment-reply/gerrit_comment_reply.py --cl 8496587 --list --drafts-only
+```
+
+Each thread displays its location, resolution & draft status (`🔴 UNRESOLVED`, `🔴 UNRESOLVED (📝 has draft reply)`, `🟡 RESOLVED BY DRAFT (📝 unpublished)`, `📝 DRAFT`, or `🟢 RESOLVED`), author (`📝 [DRAFT] You` for unpublished drafts/replies), patchset, timestamp, and unique comment ID (e.g. `[3651ea3e_b9232d19]`).
 
 ### 2. Batch Reply to Multiple Comments (Default: Drafts)
 
@@ -208,8 +214,10 @@ python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-comment-r
 - `--cl <CL_ID>`: Gerrit change number or Change-Id (defaults to detecting from current git branch).
 - `--host <URL>`: Gerrit host URL (defaults to branch config or `https://chromium-review.googlesource.com`).
 - `--revision <REV>`: Target revision ID or patchset number (default: `'current'`).
-- `--list`: List all published comment threads on the change.
-- `--unresolved-only`: Filter comment display to only unresolved threads.
+- `--list`: List all published and draft comment threads on the change.
+- `--unresolved-only`: Filter comment display to only unresolved threads and unpublished drafts.
+- `--drafts-only`: Filter comment display to only threads containing your draft comments or draft replies.
+- `--no-drafts`: Exclude unpublished draft comments and draft replies when listing comments.
 - `--publish`: Immediately publish review comments instead of saving as drafts (bypasses draft mode).
 - `--publish-drafts`: Publish all existing draft comments across revisions on the change.
 - `--batch-done <ID> [<ID> ...]`: Reply "Done" and resolve multiple comment threads (saved as drafts by default).

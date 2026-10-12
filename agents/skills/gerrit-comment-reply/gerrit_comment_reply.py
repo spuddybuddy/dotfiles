@@ -137,6 +137,54 @@ def query_comments(host: str, cl_id: str) -> Dict[str, Any]:
     return {}
 
 
+def query_drafts(host: str, cl_id: str) -> Dict[str, Any]:
+    """Query Gerrit for unpublished draft comments belonging to the caller on a change."""
+    data = call_gerrit_client(host, "rawapi", ["--path", f"changes/{cl_id}/drafts"])
+    if isinstance(data, dict):
+        return data
+    return {}
+
+
+def merge_comments_and_drafts(
+    comments_dict: Dict[str, Any], drafts_dict: Dict[str, Any]
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Merge published comments and draft comments/replies into a single per-file dictionary."""
+    merged: Dict[str, List[Dict[str, Any]]] = {}
+    all_files = sorted(set(comments_dict.keys()) | set(drafts_dict.keys()))
+
+    for filename in all_files:
+        combined: List[Dict[str, Any]] = []
+        pub_list = comments_dict.get(filename, [])
+        if isinstance(pub_list, list):
+            for c in pub_list:
+                if isinstance(c, dict):
+                    entry = dict(c)
+                    entry.setdefault("is_draft", False)
+                    combined.append(entry)
+
+        draft_list = drafts_dict.get(filename, [])
+        if isinstance(draft_list, list):
+            for d in draft_list:
+                if isinstance(d, dict):
+                    entry = dict(d)
+                    entry["is_draft"] = True
+                    combined.append(entry)
+
+        if combined:
+            merged[filename] = combined
+
+    return merged
+
+
+def query_all_comments(
+    host: str, cl_id: str, include_drafts: bool = True
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Query Gerrit for published comments and (by default) draft comments & draft replies."""
+    comments = query_comments(host, cl_id)
+    drafts = query_drafts(host, cl_id) if include_drafts else {}
+    return merge_comments_and_drafts(comments, drafts)
+
+
 def post_review(
     host: str, cl_id: str, payload: Dict[str, Any], revision: str = "current"
 ) -> Dict[str, Any]:
@@ -161,9 +209,14 @@ def create_draft(
     cl_id: str,
     comment_input: Dict[str, Any],
     revision: str = "current",
+    draft_id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Create an unpublished draft comment on a revision via gerrit_client.py rawapi."""
-    path = f"changes/{cl_id}/revisions/{revision}/drafts"
+    """Create or update an unpublished draft comment on a revision via gerrit_client.py rawapi."""
+    path = (
+        f"changes/{cl_id}/revisions/{revision}/drafts/{draft_id}"
+        if draft_id
+        else f"changes/{cl_id}/revisions/{revision}/drafts"
+    )
     raw_args = [
         "--path",
         path,
@@ -178,6 +231,19 @@ def create_draft(
     if isinstance(res, dict):
         return res
     raise RuntimeError("No response returned from gerrit_client.py rawapi when creating draft.")
+
+
+def find_existing_draft_reply(
+    comments_dict: Dict[str, Any], target_file: str, in_reply_to: str
+) -> Optional[Dict[str, Any]]:
+    """Find an existing draft reply on the given file that replies to in_reply_to."""
+    file_comments = comments_dict.get(target_file, [])
+    if not isinstance(file_comments, list):
+        return None
+    for c in file_comments:
+        if isinstance(c, dict) and c.get("is_draft") and c.get("in_reply_to") == in_reply_to:
+            return c
+    return None
 
 
 def publish_drafts(
@@ -455,12 +521,15 @@ def group_comments_into_threads(
 
 
 def format_threads_display(
-    comments_dict: Dict[str, Any], unresolved_only: bool = False
+    comments_dict: Dict[str, Any],
+    unresolved_only: bool = False,
+    drafts_only: bool = False,
 ) -> str:
-    """Format comments into a readable string showing threads and resolution status."""
+    """Format published and draft comments into readable threads showing resolution and draft status."""
     out_lines: List[str] = []
     total_threads = 0
     total_unresolved = 0
+    total_drafts = 0
 
     for filename in sorted(comments_dict.keys()):
         comment_list = comments_dict.get(filename, [])
@@ -473,11 +542,22 @@ def format_threads_display(
         for thread in threads:
             total_threads += 1
             leaf = thread[-1]
-            is_unresolved = leaf.get("unresolved", False)
-            if is_unresolved:
+            drafts_in_thread = sum(1 for c in thread if c.get("is_draft"))
+            total_drafts += drafts_in_thread
+            has_draft = drafts_in_thread > 0
+            all_drafts = drafts_in_thread == len(thread)
+
+            pub_comments = [c for c in thread if not c.get("is_draft")]
+            pub_unresolved = pub_comments[-1].get("unresolved", False) if pub_comments else False
+            leaf_unresolved = leaf.get("unresolved", False)
+            is_publicly_unresolved = pub_unresolved or leaf_unresolved
+
+            if is_publicly_unresolved:
                 total_unresolved += 1
 
-            if unresolved_only and not is_unresolved:
+            if drafts_only and not has_draft:
+                continue
+            if unresolved_only and not (is_publicly_unresolved or has_draft):
                 continue
 
             if not file_printed:
@@ -485,28 +565,57 @@ def format_threads_display(
                 file_printed = True
 
             root = thread[0]
-            line_str = f":{root.get('line')}" if root.get("line") else " (patchset level)"
-            status_str = "🔴 UNRESOLVED" if is_unresolved else "🟢 RESOLVED"
+            if filename == "/PATCHSET_LEVEL":
+                line_str = " (patchset level)"
+            elif root.get("line"):
+                line_str = f":{root.get('line')}"
+            else:
+                line_str = " (file level)"
+
+            if all_drafts:
+                status_str = "📝 DRAFT (UNRESOLVED)" if leaf_unresolved else "📝 DRAFT"
+            elif has_draft:
+                status_str = (
+                    "🔴 UNRESOLVED (📝 has draft reply)"
+                    if leaf_unresolved
+                    else "🟡 RESOLVED BY DRAFT (📝 unpublished)"
+                )
+            else:
+                status_str = "🔴 UNRESOLVED" if leaf_unresolved else "🟢 RESOLVED"
+
             out_lines.append(f"  ── Thread at {filename}{line_str} [{status_str}] ──")
 
             for idx, c in enumerate(thread):
+                is_draft_comment = bool(c.get("is_draft"))
                 author = c.get("author", {})
-                author_name = (
-                    author.get("display_name")
-                    or author.get("name")
-                    or author.get("email")
-                    or "Unknown"
-                )
+                if is_draft_comment:
+                    base_author = (
+                        author.get("display_name")
+                        or author.get("name")
+                        or author.get("email")
+                        or "You"
+                    )
+                    author_label = f"📝 [DRAFT] {base_author}"
+                else:
+                    author_label = (
+                        author.get("display_name")
+                        or author.get("name")
+                        or author.get("email")
+                        or "Unknown"
+                    )
                 cid = c.get("id", "")
                 ps = c.get("patch_set", "?")
                 updated = c.get("updated", "")[:19]
                 indent = "     " if idx == 0 else "       ↳ "
-                out_lines.append(f"{indent}[{cid}] {author_name} (PS{ps}, {updated}):")
+                out_lines.append(f"{indent}[{cid}] {author_label} (PS{ps}, {updated}):")
                 msg = c.get("message", "").strip()
                 for msg_line in msg.splitlines():
                     out_lines.append(f"{indent}  {msg_line}")
 
-    summary_str = f"Found {total_threads} thread(s) ({total_unresolved} unresolved)."
+    summary_str = (
+        f"Found {total_threads} thread(s) "
+        f"({total_unresolved} unresolved, {total_drafts} draft(s))."
+    )
     if not out_lines:
         return f"No comments found matching filter. {summary_str}"
 
@@ -515,30 +624,24 @@ def format_threads_display(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Query and reply to Gerrit comments using gerrit_client.py.",
+        description="Query published & draft Gerrit comments and post replies using gerrit_client.py.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  # List all comments on the current branch's CL:
+  # List all comments (including your draft comments & draft replies) on the current branch's CL:
   python3 gerrit_comment_reply.py --list
 
-  # List only unresolved comments on CL 8351276:
+  # List only unresolved threads and drafts on CL 8351276:
   python3 gerrit_comment_reply.py --cl 8351276 --list --unresolved-only
 
-  # Reply to a single comment thread and mark it resolved (default):
+  # List only your draft comments and draft replies on the CL:
+  python3 gerrit_comment_reply.py --list --drafts-only
+
+  # Reply to a single comment thread and mark it resolved (saved as draft by default):
   python3 gerrit_comment_reply.py --reply-to 3e2bf9a2_ac21bfa4 -m "Done, updated as suggested."
 
   # Quick "Done" or "Ack" for a single thread:
   python3 gerrit_comment_reply.py --reply-to 3e2bf9a2_ac21bfa4 --done
   python3 gerrit_comment_reply.py --reply-to 3e2bf9a2_ac21bfa4 --ack
-
-  # Batch reply to multiple threads with "Done" in a SINGLE review (one email, one UI update):
-  python3 gerrit_comment_reply.py --batch-done 3e2bf9a2_ac21bfa4 db80ab0c_d81ad2bc
-
-  # Batch reply from a JSON file:
-  python3 gerrit_comment_reply.py --batch-file replies.json
-
-  # Batch reply from a JSON file with a top-level review message:
-  python3 gerrit_comment_reply.py --batch-file replies.json -m "Uploaded PS2 with fixes."
 
   # Batch reply to multiple threads with "Done" as unpublished drafts (DEFAULT):
   python3 gerrit_comment_reply.py --batch-done 3e2bf9a2_ac21bfa4 db80ab0c_d81ad2bc
@@ -551,9 +654,6 @@ def main() -> int:
 
   # Publish all existing draft comments across the change:
   python3 gerrit_comment_reply.py --publish-drafts -m "Uploaded PS2 with fixes."
-
-  # Reply to a single thread as an unpublished draft (DEFAULT):
-  python3 gerrit_comment_reply.py --reply-to 3e2bf9a2_ac21bfa4 -m "Done, updated as suggested."
 
   # Preview draft creation without executing:
   python3 gerrit_comment_reply.py --batch-done 3e2bf9a2_ac21bfa4 db80ab0c_d81ad2bc --dry-run
@@ -576,12 +676,22 @@ def main() -> int:
     parser.add_argument(
         "--list",
         action="store_true",
-        help="List all published comment threads on the change.",
+        help="List all published and draft comment threads on the change.",
     )
     parser.add_argument(
         "--unresolved-only",
         action="store_true",
-        help="When listing comments, show only unresolved threads.",
+        help="When listing comments, show only unresolved threads and unpublished drafts.",
+    )
+    parser.add_argument(
+        "--drafts-only",
+        action="store_true",
+        help="When listing comments, show only threads containing your draft comments or draft replies.",
+    )
+    parser.add_argument(
+        "--no-drafts",
+        action="store_true",
+        help="When listing comments, exclude unpublished draft comments and draft replies.",
     )
     parser.add_argument(
         "--reply-to",
@@ -745,10 +855,16 @@ def main() -> int:
     )
 
     if is_list_action:
-        print(f"Fetching comments for CL {cl_id} from {host}...")
+        print(f"Fetching comments and drafts for CL {cl_id} from {host}...")
         try:
-            comments = query_comments(host, cl_id)
-            display = format_threads_display(comments, unresolved_only=args.unresolved_only)
+            comments = query_all_comments(
+                host, cl_id, include_drafts=not args.no_drafts
+            )
+            display = format_threads_display(
+                comments,
+                unresolved_only=args.unresolved_only,
+                drafts_only=args.drafts_only,
+            )
             print(display)
             return 0
         except Exception as e:
@@ -849,16 +965,16 @@ def main() -> int:
                 "--patchset-comment, --change-message, or --file <PATH>."
             )
 
-    # Fetch published comments if needed to resolve thread contexts
+    # Fetch published comments and drafts if needed to resolve thread contexts
     comments_dict: Dict[str, Any] = {}
     needs_comments = any(
         (it.get("reply_to") or it.get("in_reply_to") or it.get("id"))
         for it in items
     )
     if needs_comments:
-        print(f"Fetching comments for CL {cl_id} from {host}...")
+        print(f"Fetching comments and drafts for CL {cl_id} from {host}...")
         try:
-            comments_dict = query_comments(host, cl_id)
+            comments_dict = query_all_comments(host, cl_id)
         except Exception as e:
             print(f"❌ Error fetching comments: {e}", file=sys.stderr)
             return 1
@@ -871,7 +987,7 @@ def main() -> int:
 
     comments_map: Dict[str, List[Dict[str, Any]]] = {}
     all_contexts: List[Dict[str, Any]] = []
-    draft_entries: List[Tuple[str, Dict[str, Any], str]] = []
+    draft_entries: List[Tuple[str, Dict[str, Any], str, Optional[str]]] = []
 
     for item in items:
         try:
@@ -893,7 +1009,16 @@ def main() -> int:
         d_rev = str(ctx.get("patch_set")) if (args.revision == "current" and ctx.get("patch_set")) else args.revision
         draft_input = dict(c_obj)
         draft_input["path"] = tgt_file
-        draft_entries.append((tgt_file, draft_input, d_rev))
+        existing_draft_id: Optional[str] = None
+        if c_obj.get("in_reply_to"):
+            existing_draft = find_existing_draft_reply(
+                comments_dict, tgt_file, c_obj["in_reply_to"]
+            )
+            if existing_draft and existing_draft.get("id"):
+                existing_draft_id = existing_draft["id"]
+                if args.revision == "current" and existing_draft.get("patch_set"):
+                    d_rev = str(existing_draft["patch_set"])
+        draft_entries.append((tgt_file, draft_input, d_rev, existing_draft_id))
 
     if comments_map:
         payload["comments"] = comments_map
@@ -922,22 +1047,28 @@ def main() -> int:
     if is_draft_mode:
         if args.dry_run:
             print(f"[DRY-RUN] Target CL: {cl_id} on {host}")
-            print(f"[DRY-RUN] Would create {len(draft_entries)} draft comment(s) (UNPUBLISHED):")
-            for tgt_file, d_input, rev in draft_entries:
-                print(f"  - PUT changes/{cl_id}/revisions/{rev}/drafts:")
+            print(f"[DRY-RUN] Would save {len(draft_entries)} draft comment(s) (UNPUBLISHED):")
+            for tgt_file, d_input, rev, d_id in draft_entries:
+                draft_path = (
+                    f"changes/{cl_id}/revisions/{rev}/drafts/{d_id}"
+                    if d_id
+                    else f"changes/{cl_id}/revisions/{rev}/drafts"
+                )
+                print(f"  - PUT {draft_path}:")
                 print(json.dumps(d_input, indent=4))
             return 0
 
-        print(f"Creating {len(draft_entries)} draft comment(s) on CL {cl_id} on {host}...")
+        print(f"Saving {len(draft_entries)} draft comment(s) on CL {cl_id} on {host}...")
         created = 0
-        for tgt_file, d_input, rev in draft_entries:
+        for tgt_file, d_input, rev, d_id in draft_entries:
             try:
-                create_draft(host, cl_id, d_input, revision=rev)
+                create_draft(host, cl_id, d_input, revision=rev, draft_id=d_id)
                 created += 1
                 loc = f"{tgt_file}:{d_input.get('line', '')}" if d_input.get("line") else tgt_file
-                print(f"  ✓ Draft created at {loc}")
+                verb = "updated" if d_id else "created"
+                print(f"  ✓ Draft {verb} at {loc}")
             except Exception as e:
-                print(f"❌ Error creating draft for {tgt_file}: {e}", file=sys.stderr)
+                print(f"❌ Error saving draft for {tgt_file}: {e}", file=sys.stderr)
                 return 1
 
         print(f"✅ Successfully created {created} draft comment(s) on CL {cl_id}!")
