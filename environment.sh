@@ -85,7 +85,6 @@ add_to_path_post $HOME/github/spuddybuddy/dotfiles/bin
 # Ensure it's added before system paths, as some depot_tools binaries shadow
 # system-installed ones.
 add_to_path_pre $HOME/depot_tools
-
 add_to_path_post $CHROMIUM_SRC/third_party/llvm-build/Release+Asserts/bin
 
 # Android tools
@@ -103,7 +102,7 @@ add_to_path_post $HOME/google-cloud-sdk/bin
 # https://cloud.google.com/storage/docs/gsutil_install
 add_to_path_post $HOME/gsutil
 
-# Scripts installed by pip (Python).  Mostly for bikeshed
+# Scripts installed by pip (Python).  Mostly for bikeshed, but also agy
 add_to_path_post $HOME/.local/bin
 
 # Homebrew and locally built binaries on MacOS
