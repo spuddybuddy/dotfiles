@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import os
 
@@ -74,8 +74,8 @@ def compare_directories(dir_a, dir_b):
 if __name__ == "__main__":
     # --- CONFIGURATION ---
     # Replace these paths with the actual folders you want to compare
-    folder_a = r"C:\Users\YourName\Documents\FolderA"
-    folder_b = r"C:\Users\YourName\Documents\FolderB"
+    folder_a = r"/Volumes/AhchTo"
+    folder_b = r"/Volumes/Crait"
 
     if os.path.exists(folder_a) and os.path.exists(folder_b):
         compare_directories(folder_a, folder_b)
