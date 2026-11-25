@@ -257,8 +257,112 @@ class GerritCommentReplyTest(unittest.TestCase):
                 "PUT",
                 "--body",
                 json.dumps(draft_input),
+                "--accept_status",
+                "200,201",
             ],
         )
+
+    @mock.patch("gerrit_comment_reply.call_gerrit_client")
+    def test_update_existing_draft(self, mock_client):
+        mock_client.return_value = {"id": "d_existing"}
+        draft_input = {
+            "path": "foo/bar.cc",
+            "line": 42,
+            "message": "Updated draft reply",
+            "in_reply_to": "c_root",
+        }
+        res = gcr.create_draft(
+            "https://host.example.com",
+            "123",
+            draft_input,
+            revision="2",
+            draft_id="d_existing",
+        )
+        self.assertEqual({"id": "d_existing"}, res)
+        mock_client.assert_called_once_with(
+            "https://host.example.com",
+            "rawapi",
+            [
+                "--path",
+                "changes/123/revisions/2/drafts/d_existing",
+                "--method",
+                "PUT",
+                "--body",
+                json.dumps(draft_input),
+                "--accept_status",
+                "200,201",
+            ],
+        )
+
+    @mock.patch("gerrit_comment_reply.call_gerrit_client")
+    def test_query_drafts_and_merge_standalone_and_replies(self, mock_client):
+        drafts_response = {
+            "foo/bar.cc": [
+                {
+                    "id": "d_reply_resolving",
+                    "in_reply_to": "c_root",
+                    "patch_set": 2,
+                    "updated": "2026-10-12 23:00:00.000000000",
+                    "message": "Done, updated.",
+                    "unresolved": False,
+                },
+                {
+                    "id": "d_standalone",
+                    "line": 88,
+                    "patch_set": 2,
+                    "updated": "2026-10-12 23:05:00.000000000",
+                    "message": "Note for reviewers: check lifetime here.",
+                    "unresolved": True,
+                },
+            ],
+            "only_draft.cc": [
+                {
+                    "id": "d_new_file_note",
+                    "line": 12,
+                    "patch_set": 2,
+                    "updated": "2026-10-12 23:06:00.000000000",
+                    "message": "Self note on new file.",
+                    "unresolved": False,
+                }
+            ],
+        }
+        mock_client.return_value = drafts_response
+        drafts = gcr.query_drafts("https://host.example.com", "123")
+        merged = gcr.merge_comments_and_drafts(self.sample_comments, drafts)
+
+        # Verify both published files and draft-only files are present
+        self.assertIn("foo/bar.cc", merged)
+        self.assertIn("only_draft.cc", merged)
+
+        # Verify find_existing_draft_reply locates draft replies
+        existing = gcr.find_existing_draft_reply(merged, "foo/bar.cc", "c_root")
+        self.assertIsNotNone(existing)
+        self.assertEqual("d_reply_resolving", existing["id"])
+
+        # Verify standalone draft comments and draft replies render cleanly
+        full_output = gcr.format_threads_display(merged)
+        self.assertIn("📝 [DRAFT] You", full_output)
+        self.assertIn("[d_reply_resolving]", full_output)
+        self.assertIn("🟡 RESOLVED BY DRAFT (📝 unpublished)", full_output)
+        self.assertIn("[d_standalone]", full_output)
+        self.assertIn("📝 DRAFT (UNRESOLVED)", full_output)
+        self.assertIn("[d_new_file_note]", full_output)
+        self.assertIn("Found 5 thread(s) (2 unresolved, 3 draft(s)).", full_output)
+
+        # Verify --drafts-only filters strictly to threads with standalone drafts or draft replies
+        drafts_only_output = gcr.format_threads_display(merged, drafts_only=True)
+        self.assertIn("[d_reply_resolving]", drafts_only_output)
+        self.assertIn("[d_standalone]", drafts_only_output)
+        self.assertIn("[d_new_file_note]", drafts_only_output)
+        self.assertNotIn("[c_file_level]", drafts_only_output)
+        self.assertNotIn("[c_patchset]", drafts_only_output)
+
+        # Verify --unresolved-only keeps unpublished draft replies visible before publication
+        unresolved_output = gcr.format_threads_display(merged, unresolved_only=True)
+        self.assertIn("[d_reply_resolving]", unresolved_output)
+        self.assertIn("[d_standalone]", unresolved_output)
+        self.assertIn("[d_new_file_note]", unresolved_output)
+        self.assertNotIn("[c_file_level]", unresolved_output)
 
     @mock.patch("gerrit_comment_reply.post_review")
     def test_publish_drafts(self, mock_post_review):

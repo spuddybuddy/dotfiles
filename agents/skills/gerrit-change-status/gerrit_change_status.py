@@ -11,7 +11,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Tuple
+
 
 # Re-exec under Python >= 3.11 if available (satisfies depot_tools type hint and StrEnum requirements)
 if sys.version_info < (3, 11):
@@ -174,6 +176,8 @@ def query_cl_detail(host: str, cl_id: str) -> Optional[Dict[str, Any]]:
             "-o",
             "DETAILED_LABELS",
             "-o",
+            "DETAILED_ACCOUNTS",
+            "-o",
             "CURRENT_REVISION",
             "-o",
             "MESSAGES",
@@ -186,6 +190,50 @@ def query_cl_detail(host: str, cl_id: str) -> Optional[Dict[str, Any]]:
     if isinstance(data, list) and len(data) > 0:
         return data[0]
     return None
+
+
+def query_cl_details_batch(host: str, cl_ids: List[str]) -> Dict[str, Dict[str, Any]]:
+    """Query Gerrit for multiple change details in batched API calls."""
+    results: Dict[str, Dict[str, Any]] = {}
+    batch_size = 25
+    for i in range(0, len(cl_ids), batch_size):
+        chunk = cl_ids[i : i + batch_size]
+        query_str = " OR ".join(f"change:{cid}" for cid in chunk)
+        data = call_gerrit_client(
+            host,
+            "changes",
+            [
+                "--query",
+                query_str,
+                "-o",
+                "DETAILED_LABELS",
+                "-o",
+                "DETAILED_ACCOUNTS",
+                "-o",
+                "CURRENT_REVISION",
+                "-o",
+                "MESSAGES",
+                "-o",
+                "SUBMITTABLE",
+                "-o",
+                "SUBMIT_REQUIREMENTS",
+            ],
+        )
+        if isinstance(data, list):
+            for item in data:
+                num = item.get("_number")
+                cid = item.get("change_id")
+                if num is not None:
+                    results[str(num)] = item
+                if cid:
+                    results[str(cid)] = item
+        else:
+            # Fallback to individual queries if batch fails
+            for cid in chunk:
+                detail = query_cl_detail(host, cid)
+                if detail:
+                    results[cid] = detail
+    return results
 
 
 def query_cl_comments(host: str, cl_id: str) -> Dict[str, Any]:
@@ -240,23 +288,45 @@ def extract_unresolved_comments(comments_data: Dict[str, Any]) -> List[Dict[str,
     return unresolved_threads
 
 
-def format_cr_votes(detail: Dict[str, Any]) -> str:
-    """Format Code-Review label votes."""
+def extract_reviewer_info(detail: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+    """Extract formatted active Code-Review votes and pending human reviewer names."""
+    owner_id = detail.get("owner", {}).get("_account_id")
     labels = detail.get("labels", {})
     cr_label = labels.get("Code-Review", {})
     all_votes = cr_label.get("all", [])
 
-    parts: List[str] = []
+    voted_parts: List[str] = []
+    voted_ids = set()
 
     for vote in all_votes:
         val = vote.get("value", 0)
-        name = vote.get("name") or vote.get("email")
-        if not name:
-            name = f"Account {vote.get('_account_id')}"
+        acc_id = vote.get("_account_id")
+        name = vote.get("name") or vote.get("email") or f"Account {acc_id}"
         if val > 0:
-            parts.append(f"**+{val}** ({name})")
+            voted_parts.append(f"**+{val}** ({name})")
+            voted_ids.add(acc_id)
         elif val < 0:
-            parts.append(f"**{val}** ({name})")
+            voted_parts.append(f"**{val}** ({name})")
+            voted_ids.add(acc_id)
+
+    pending_names: List[str] = []
+    for rev in detail.get("reviewers", {}).get("REVIEWER", []):
+        acc_id = rev.get("_account_id")
+        tags = rev.get("tags", [])
+        if acc_id == owner_id or acc_id in voted_ids or "SERVICE_USER" in tags:
+            continue
+        name = rev.get("name") or rev.get("email") or f"Account {acc_id}"
+        pending_names.append(name)
+
+    return voted_parts, pending_names
+
+
+def format_cr_votes(detail: Dict[str, Any]) -> str:
+    """Format Code-Review label votes and pending reviewers."""
+    voted_parts, pending_names = extract_reviewer_info(detail)
+    parts = list(voted_parts)
+    if pending_names:
+        parts.append(f"*Pending*: {', '.join(pending_names)}")
 
     if not parts:
         return "*None*"
@@ -297,38 +367,62 @@ def determine_status_next_step(
     if submittable:
         return "Ready to land on CQ."
 
+    wip = detail.get("work_in_progress", False)
+    voted_parts, pending_names = extract_reviewer_info(detail)
+
     if unresolved_comments:
         count = len(unresolved_comments)
-        return f"{count} unresolved comment{'s' if count > 1 else ''} to address."
+        msg = f"{count} unresolved comment{'s' if count > 1 else ''} to address."
+        return f"WIP; {msg}" if wip else msg
 
     reqs = detail.get("submit_requirements", [])
-    reviewers = detail.get("reviewers", {}).get("REVIEWER", [])
-    cr_all = detail.get("labels", {}).get("Code-Review", {}).get("all", [])
-    voted_ids = {v.get("_account_id") for v in cr_all if v.get("value", 0) > 0}
-    pending_reviewers = [r for r in reviewers if r.get("_account_id") not in voted_ids]
+    unsatisfied = [
+        r.get("name", "")
+        for r in reqs
+        if r.get("status") not in ("SATISFIED", "NOT_APPLICABLE", "OVERRIDDEN", "FORCED")
+    ]
 
+    if not voted_parts and not pending_names:
+        base = "Needs reviewers assigned."
+    elif pending_names:
+        names_str = ", ".join(pending_names[:2]) + (
+            "..." if len(pending_names) > 2 else ""
+        )
+        if "Code-Owners" in unsatisfied:
+            base = f"Awaiting Code-Owners (+1) from {names_str}."
+        else:
+            base = f"Awaiting review (+1) from {names_str}."
+    elif "Code-Owners" in unsatisfied:
+        base = "Needs Code-Owners approval (+1)."
+    elif "Code-Review" in unsatisfied:
+        base = "Needs committer Code-Review (+1)."
+    elif "Review-Enforcement" in unsatisfied:
+        base = "Requires two approvals per Review-Enforcement."
+    elif "No-Unresolved-Comments" in unsatisfied:
+        base = "Unresolved comments block submit."
+    elif unsatisfied:
+        base = f"Unsatisfied: {', '.join(unsatisfied)}."
+    else:
+        base = "Awaiting review or tryjob completion."
+
+    if wip:
+        return f"WIP; {base[0].lower() + base[1:]}"
+    return base
+
+
+def format_submit_requirements_summary(detail: Dict[str, Any]) -> str:
+    """Summarize applicable submit requirements for breakdown display."""
+    reqs = detail.get("submit_requirements", [])
+    parts: List[str] = []
     for req in reqs:
-        req_name = req.get("name")
-        req_status = req.get("status")
-        if req_status not in ("SATISFIED", "NOT_APPLICABLE", "OVERRIDDEN", "FORCED"):
-            if req_name == "Code-Owners":
-                return "Needs Code-Owners approval (+1)."
-            if req_name == "Code-Review":
-                if pending_reviewers:
-                    names = [r.get("name") or r.get("email") or str(r.get("_account_id")) for r in pending_reviewers]
-                    return f"Awaiting review from {', '.join(names[:2])}."
-                return "Needs reviewers assigned."
-            if req_name == "Review-Enforcement":
-                return "Requires two approvals per Review-Enforcement."
-            if req_name == "No-Unresolved-Comments":
-                return "Unresolved comments block submit."
-            return f"Requirement '{req_name}' is {req_status}."
-
-    if pending_reviewers:
-        names = [r.get("name") or r.get("email") or str(r.get("_account_id")) for r in pending_reviewers]
-        return f"Awaiting review from {', '.join(names[:2])}."
-
-    return "Awaiting review or tryjob completion."
+        status = req.get("status", "")
+        if status == "NOT_APPLICABLE":
+            continue
+        name = req.get("name", "Unknown")
+        passed = status in ("SATISFIED", "OVERRIDDEN", "FORCED")
+        icon = "SATISFIED" if passed else status
+        parts.append(f"`{name}`: {icon}")
+    return ", ".join(parts) if parts else "None"
 
 
 def build_markdown_report(
@@ -352,6 +446,8 @@ def build_markdown_report(
     for item in cl_records:
         cl_id = item["cl_id"]
         cl_url = f"https://crrev.com/c/{cl_id}"
+        detail = item.get("detail", {})
+        wip_suffix = " *(WIP)*" if detail.get("work_in_progress") else ""
         repo_branch_str = format_repo_branch(item["repo_path"], item["branch"], delimiter)
         subject = item.get("subject", "").replace("|", "\\|")
         cr_votes = item.get("cr_votes_formatted", "*None*")
@@ -360,7 +456,7 @@ def build_markdown_report(
         total_unresolved += len(item.get("unresolved_comments", []))
 
         lines.append(
-            f"| [{cl_id}]({cl_url}) | `{repo_branch_str}` | {subject} | {cr_votes} | {submittable_badge} | {next_step} |"
+            f"| [{cl_id}]({cl_url}){wip_suffix} | `{repo_branch_str}` | {subject} | {cr_votes} | {submittable_badge} | {next_step} |"
         )
 
     lines.append("\n---\n")
@@ -392,6 +488,42 @@ def build_markdown_report(
                 idx += 1
         lines.append("")
 
+    lines.append("---\n")
+
+    # 3. Submittability & Next Steps Breakdown
+    lines.append("### Submittability & Next Steps Breakdown\n")
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for item in cl_records:
+        repo_key = prettify_repo_path(item["repo_path"]) or "Explicit CLs"
+        grouped.setdefault(repo_key, []).append(item)
+
+    for repo_key, items in grouped.items():
+        lines.append(f"- **`{repo_key}`**:")
+        for item in items:
+            cl_id = item["cl_id"]
+            cl_url = f"https://crrev.com/c/{cl_id}"
+            branch = item["branch"] or "-"
+            subject = item.get("subject", "")
+            detail = item.get("detail", {})
+            wip_str = " *(WIP)*" if detail.get("work_in_progress") else ""
+            topic = detail.get("topic")
+            topic_str = f" (topic: `{topic}`)" if topic else ""
+            voted_parts, pending_names = extract_reviewer_info(detail)
+            rev_summary_parts = list(voted_parts)
+            if pending_names:
+                rev_summary_parts.append(f"Pending: {', '.join(pending_names)}")
+            rev_summary = "; ".join(rev_summary_parts) if rev_summary_parts else "None assigned"
+            reqs_summary = format_submit_requirements_summary(detail)
+            next_step = item.get("next_step", "")
+
+            lines.append(
+                f"  - **[{cl_id}]({cl_url})** (`{branch}`){wip_str}{topic_str}: {subject}"
+            )
+            lines.append(f"    - **Reviewers**: {rev_summary}")
+            lines.append(f"    - **Requirements**: {reqs_summary}")
+            lines.append(f"    - **Next Step**: {next_step}")
+    lines.append("")
+
     return "\n".join(lines)
 
 
@@ -406,8 +538,11 @@ def build_text_report(
         subject = item.get("subject", "")
         submittable = "YES" if item.get("submittable") else "NO"
         next_step = item.get("next_step", "")
+        detail = item.get("detail", {})
+        reqs_summary = format_submit_requirements_summary(detail)
         lines.append(f"CL {cl_id} [{repo_branch}]: {subject}")
         lines.append(f"  Submittable: {submittable} | Status: {next_step}")
+        lines.append(f"  Requirements: {reqs_summary}")
         if item.get("unresolved_comments"):
             lines.append(f"  Unresolved comments: {len(item['unresolved_comments'])}")
         lines.append("")
@@ -497,10 +632,13 @@ def main() -> int:
             seen.add(cl_id)
             unique_targets.append((cl_id, repo, branch))
 
-    records: List[Dict[str, Any]] = []
+    # Batch fetch CL details in a single Gerrit query (or chunks of 25)
+    all_cl_ids = [t[0] for t in unique_targets]
+    details_by_id = query_cl_details_batch(args.host, all_cl_ids)
 
+    active_targets: List[Tuple[str, str, str, Dict[str, Any]]] = []
     for cl_id, repo, branch in unique_targets:
-        detail = query_cl_detail(args.host, cl_id)
+        detail = details_by_id.get(cl_id)
         if not detail:
             print(f"Warning: Could not fetch details for CL {cl_id}", file=sys.stderr)
             continue
@@ -509,10 +647,26 @@ def main() -> int:
         if not args.include_merged and status in ("MERGED", "ABANDONED"):
             continue
 
-        unresolved_comments: List[Dict[str, Any]] = []
-        if not args.no_comments:
-            comments_data = query_cl_comments(args.host, cl_id)
-            unresolved_comments = extract_unresolved_comments(comments_data)
+        active_targets.append((cl_id, repo, branch, detail))
+
+    # Fetch comments in parallel only for active CLs
+    comments_by_id: Dict[str, List[Dict[str, Any]]] = {}
+    if not args.no_comments and active_targets:
+        def _fetch_comments(cid: str) -> Tuple[str, List[Dict[str, Any]]]:
+            cdata = query_cl_comments(args.host, cid)
+            return cid, extract_unresolved_comments(cdata)
+
+        with ThreadPoolExecutor(max_workers=min(8, len(active_targets))) as executor:
+            for cid, unresolved in executor.map(
+                _fetch_comments, [t[0] for t in active_targets]
+            ):
+                comments_by_id[cid] = unresolved
+
+    records: List[Dict[str, Any]] = []
+
+    for cl_id, repo, branch, detail in active_targets:
+        status = detail.get("status", "NEW")
+        unresolved_comments = comments_by_id.get(cl_id, [])
 
         submittable, submittable_badge = format_submittable(detail)
         cr_votes_formatted = format_cr_votes(detail)
@@ -525,6 +679,7 @@ def main() -> int:
             "repo_branch": format_repo_branch(repo, branch, args.delimiter),
             "subject": detail.get("subject", ""),
             "status": status,
+            "work_in_progress": detail.get("work_in_progress", False),
             "submittable": submittable,
             "submittable_badge": submittable_badge,
             "cr_votes_formatted": cr_votes_formatted,

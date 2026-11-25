@@ -24,13 +24,16 @@ Activate this skill when the user:
 
 ## Workflow
 
-### 1. Run the status tool
+### 1. Run the status tool once
 
-Run `gerrit_change_status.py` pointing to one or more repositories or parent directories containing git repositories:
+Run `gerrit_change_status.py` **once**, passing all relevant repositories or parent directories in a single invocation:
 
 ```bash
-python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-change-status/gerrit_change_status.py ~/openscreen ~/openscreen2 ~/chrome/infra
+python3 /Users/mfoltz/github/spuddybuddy/dotfiles/agents/skills/gerrit-change-status/gerrit_change_status.py ~/openscreen ~/openscreen2 ~/chrome/infra ~/chrome/src
 ```
+
+- **Single-pass execution**: The script batches CL metadata queries, fetches unresolved comments in parallel, and generates all three required output sections (`Overall Summary`, `Unresolved Comments`, and `Submittability & Next Steps Breakdown`) in a single run.
+- **Do not run multiple times or pipe output**: Present the markdown output produced by this single invocation directly to the user without running follow-up `--format json` queries or piping to inline scripts.
 
 ### 2. Command Line Options
 
